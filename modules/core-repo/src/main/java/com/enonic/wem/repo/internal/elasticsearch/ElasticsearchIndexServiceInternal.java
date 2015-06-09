@@ -34,6 +34,7 @@ import com.enonic.wem.repo.internal.elasticsearch.document.StoreDocument;
 import com.enonic.wem.repo.internal.index.IndexContext;
 import com.enonic.wem.repo.internal.index.IndexException;
 import com.enonic.wem.repo.internal.index.IndexServiceInternal;
+import com.enonic.wem.repo.internal.index.result.ScrollResult;
 import com.enonic.wem.repo.internal.repository.IndexNameResolver;
 import com.enonic.xp.index.IndexType;
 import com.enonic.xp.node.Node;
@@ -229,6 +230,18 @@ public class ElasticsearchIndexServiceInternal
             indexTypeName( indexType ).
             id( nodeId.toString() ).
             build() );
+    }
+
+    @Override
+    public ScrollResult startScanScroll( final ScanAndScrollParams params )
+    {
+        return this.elasticsearchDao.startScroll( params );
+    }
+
+    @Override
+    public ScrollResult nextScanScroll( final String scrollId, final int keepAliveSeconds )
+    {
+        return this.elasticsearchDao.getScroll( scrollId, keepAliveSeconds );
     }
 
     @Reference

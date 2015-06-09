@@ -28,13 +28,17 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.repositories.RepositoryException;
+import org.elasticsearch.search.Scroll;
 import org.elasticsearch.snapshots.SnapshotInfo;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -47,11 +51,13 @@ import com.enonic.wem.repo.internal.elasticsearch.document.DeleteDocument;
 import com.enonic.wem.repo.internal.elasticsearch.document.StoreDocument;
 import com.enonic.wem.repo.internal.elasticsearch.query.ElasticsearchQuery;
 import com.enonic.wem.repo.internal.elasticsearch.result.GetResultFactory;
+import com.enonic.wem.repo.internal.elasticsearch.result.ScrollResultFactory;
 import com.enonic.wem.repo.internal.elasticsearch.result.SearchResultFactory;
 import com.enonic.wem.repo.internal.elasticsearch.xcontent.StoreDocumentXContentBuilderFactory;
 import com.enonic.wem.repo.internal.index.IndexException;
 import com.enonic.wem.repo.internal.index.query.QueryService;
 import com.enonic.wem.repo.internal.index.result.GetResult;
+import com.enonic.wem.repo.internal.index.result.ScrollResult;
 import com.enonic.wem.repo.internal.index.result.SearchResult;
 import com.enonic.wem.repo.internal.repository.IndexNameResolver;
 import com.enonic.xp.home.HomeDir;
@@ -75,6 +81,8 @@ public class ElasticsearchDaoImpl
     private final String searchPreference = "_local";
 
     private final String searchTimeout = "5s";
+
+    private final String scrollTimeout = "2s";
 
     private final String storeTimeout = "5s";
 
@@ -182,6 +190,36 @@ public class ElasticsearchDaoImpl
             actionGet( searchTimeout );
 
         return GetResultFactory.create( getResponse );
+    }
+
+    @Override
+    public ScrollResult startScroll( final ScanAndScrollParams params )
+    {
+
+        final SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder( this.client ).
+            setIndices( params.getIndex() ).
+            setTypes( params.getType() ).
+            setSearchType( SearchType.SCAN ).
+            setSize( params.getSize() ).
+            setScroll( new Scroll( TimeValue.timeValueSeconds( params.getKeepAliveSeconds() ) ) ).
+            addFields( "*" );
+
+        final SearchResponse searchResponse = this.client.search( searchRequestBuilder.request() ).actionGet( scrollTimeout );
+
+        return ScrollResultFactory.create( searchResponse );
+    }
+
+    @Override
+    public ScrollResult getScroll( final String scrollId, final int keepAliveSeconds )
+    {
+        final SearchScrollRequest request = new SearchScrollRequestBuilder( this.client ).
+            setScrollId( scrollId ).
+            setScroll( TimeValue.timeValueSeconds( keepAliveSeconds ) ).
+            request();
+
+        final SearchResponse searchResponse = this.client.searchScroll( request ).actionGet( scrollTimeout );
+
+        return ScrollResultFactory.create( searchResponse );
     }
 
     private SearchResult doSearchRequest( final SearchRequestBuilder searchRequestBuilder )

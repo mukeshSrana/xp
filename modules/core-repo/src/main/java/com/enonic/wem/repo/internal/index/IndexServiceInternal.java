@@ -4,12 +4,14 @@ import java.util.Set;
 
 import org.elasticsearch.common.unit.TimeValue;
 
+import com.enonic.wem.repo.internal.elasticsearch.ClusterHealthStatus;
+import com.enonic.wem.repo.internal.elasticsearch.ScanAndScrollParams;
+import com.enonic.wem.repo.internal.index.result.ScrollResult;
 import com.enonic.xp.index.IndexType;
 import com.enonic.xp.node.Node;
 import com.enonic.xp.node.NodeId;
 import com.enonic.xp.node.NodeVersionId;
 import com.enonic.xp.repository.RepositoryId;
-import com.enonic.wem.repo.internal.elasticsearch.ClusterHealthStatus;
 
 public interface IndexServiceInternal
 {
@@ -22,6 +24,10 @@ public interface IndexServiceInternal
     public void store( final Node node, final NodeVersionId nodeVersionId, final IndexContext context );
 
     public void delete( final NodeId nodeId, final IndexContext context );
+
+    public ScrollResult startScanScroll( final ScanAndScrollParams params);
+
+    public ScrollResult nextScanScroll( final String scrollId, final int keepAliveSeconds);
 
     public Set<String> getAllRepositoryIndices( final RepositoryId repositoryId );
 
