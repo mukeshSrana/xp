@@ -23,8 +23,6 @@ module api.liveedit.layout {
 
         private regionViews: RegionView[];
 
-        private regionIndex: number;
-
         private itemViewAddedListener: (event: ItemViewAddedEvent) => void;
 
         private itemViewRemovedListener: (event: ItemViewRemovedEvent) => void;
@@ -33,7 +31,7 @@ module api.liveedit.layout {
 
         constructor(builder: LayoutComponentViewBuilder) {
             this.regionViews = [];
-            this.regionIndex = 0;
+
             this.liveEditModel = builder.parentRegionView.liveEditModel;
             this.layoutComponent = builder.component;
             LayoutComponentView.debug = false;
@@ -114,7 +112,6 @@ module api.liveedit.layout {
             });
 
             this.regionViews = [];
-            this.regionIndex = 0;
 
             return this.doParseRegions();
         }
@@ -126,40 +123,39 @@ module api.liveedit.layout {
             if (!layoutRegions) {
                 return;
             }
-            var regions: Region[] = layoutRegions.getRegions();
             var children = parentElement ? parentElement.getChildren() : this.getChildren();
 
             children.forEach((childElement: api.dom.Element) => {
                 var itemType = ItemType.fromElement(childElement);
                 var isRegionView = api.ObjectHelper.iFrameSafeInstanceOf(childElement, RegionView);
+                var region, regionName, regionView;
+
                 if (isRegionView) {
-                    var region = regions[this.regionIndex++];
+                    regionName = RegionItemType.getRegionName(childElement);
+                    region = layoutRegions.getRegionByName(regionName);
                     if (region) {
                         // reuse existing region view
-                        var regionView = <RegionView> childElement;
+                        regionView = <RegionView> childElement;
                         // update view's data
                         regionView.setRegion(region);
                         // register it again because we unregistered everything before parsing
                         this.registerRegionView(regionView);
                     }
-                } else if (itemType) {
-                    if (RegionItemType.get().equals(itemType)) {
-                        // regions may be nested on different levels so use layout wide var for count
-                        var region = regions[this.regionIndex++];
 
-                        if (region) {
-                            var regionView = new RegionView(new RegionViewBuilder().
-                                setParentView(this).
-                                setParentElement(parentElement ? parentElement : this).
-                                setRegion(region).
-                                setElement(childElement));
+                } else if (itemType && RegionItemType.get().equals(itemType)) {
+                    regionName = RegionItemType.getRegionName(childElement);
+                    region = layoutRegions.getRegionByName(regionName);
 
-                            this.registerRegionView(regionView);
-                        }
+                    if (region) {
+                        regionView = new RegionView(new RegionViewBuilder().
+                            setParentView(this).
+                            setParentElement(parentElement ? parentElement : this).
+                            setRegion(region).
+                            setElement(childElement));
+
+                        this.registerRegionView(regionView);
                     }
-                    else {
-                        this.doParseRegions(childElement);
-                    }
+
                 } else {
                     this.doParseRegions(childElement);
                 }

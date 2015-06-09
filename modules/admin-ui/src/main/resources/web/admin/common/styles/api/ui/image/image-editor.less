@@ -1,0 +1,77 @@
+.image-editor {
+  .notSelectable();
+  display: inline-block;
+
+  &.edit-focus {
+    .image-canvas {
+      .image-image {
+        .opacity(.7);
+      }
+
+      .image-clip {
+        display: block;
+      }
+    }
+  }
+
+  .image-canvas {
+    position: relative;
+    background-color: #000;
+
+    .image-image {
+      vertical-align: top; // to remove padding below the image
+    }
+
+    .image-clip {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+
+      .stroke-circle {
+        cursor: move;
+      }
+    }
+  }
+
+  .image-toolbar {
+    padding: 10px;
+    .clearfix();
+
+    .buttons-container {
+
+      button {
+        font-size: 32px;
+        padding: 0;
+        .button-foreground(@admin-font-gray2);
+
+        &.manual {
+          .button-foreground(@admin-blue);
+        }
+
+        span {
+          display: none;
+        }
+
+      }
+
+    }
+
+    .edit-container {
+      text-align: center;
+
+      button {
+        margin-left: 10px;
+
+        span {
+          // make text buttons equal height with icon ones
+          line-height: 30px;
+        }
+      }
+    }
+
+  }
+
+}

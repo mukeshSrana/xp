@@ -11,7 +11,7 @@ import com.google.common.net.UrlEscapers;
 import com.enonic.xp.branch.Branch;
 import com.enonic.xp.content.ContentService;
 import com.enonic.xp.exception.NotFoundException;
-import com.enonic.xp.portal.PortalContext;
+import com.enonic.xp.portal.PortalRequest;
 import com.enonic.xp.portal.url.AbstractUrlParams;
 import com.enonic.xp.web.servlet.ServletRequestUrlHelper;
 import com.enonic.xp.web.servlet.UriRewritingResult;
@@ -22,7 +22,7 @@ import static org.apache.commons.lang.StringUtils.removeStart;
 
 abstract class PortalUrlBuilder<T extends AbstractUrlParams>
 {
-    protected PortalContext context;
+    protected PortalRequest portalRequest;
 
     protected T params;
 
@@ -30,18 +30,18 @@ abstract class PortalUrlBuilder<T extends AbstractUrlParams>
 
     private String getBaseUri()
     {
-        return this.context.getBaseUri();
+        return this.portalRequest.getBaseUri();
     }
 
     private Branch getBranch()
     {
-        return this.context.getBranch();
+        return this.portalRequest.getBranch();
     }
 
     public final void setParams( final T params )
     {
         this.params = params;
-        this.context = this.params.getContext();
+        this.portalRequest = this.params.getPortalRequest();
     }
 
     protected final void appendPart( final StringBuilder str, final String urlPart )
@@ -153,7 +153,7 @@ abstract class PortalUrlBuilder<T extends AbstractUrlParams>
         final StringBuilder str = new StringBuilder();
         appendPart( str, getBaseUri() );
         appendPart( str, getBranch().toString() );
-        appendPart( str, this.context.getContentPath().toString() );
+        appendPart( str, this.portalRequest.getContentPath().toString() );
         appendPart( str, "_" );
         appendPart( str, "error" );
         appendPart( str, String.valueOf( code ) );

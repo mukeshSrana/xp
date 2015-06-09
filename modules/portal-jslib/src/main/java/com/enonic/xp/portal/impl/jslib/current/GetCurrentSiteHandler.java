@@ -9,17 +9,20 @@ import com.enonic.xp.content.ContentNotFoundException;
 import com.enonic.xp.content.ContentPath;
 import com.enonic.xp.content.ContentService;
 import com.enonic.xp.content.site.Site;
+import com.enonic.xp.portal.PortalRequest;
+import com.enonic.xp.portal.PortalRequestAccessor;
+import com.enonic.xp.portal.impl.jslib.mapper.SiteMapper;
 import com.enonic.xp.portal.script.command.CommandHandler;
 import com.enonic.xp.portal.script.command.CommandRequest;
-import com.enonic.xp.portal.impl.jslib.mapper.SiteMapper;
-import com.enonic.xp.portal.PortalContext;
-import com.enonic.xp.portal.PortalContextAccessor;
+import com.enonic.xp.site.SiteService;
 
 @Component(immediate = true)
 public final class GetCurrentSiteHandler
     implements CommandHandler
 {
     private ContentService contentService;
+
+    private SiteService siteService;
 
     @Override
     public String getName()
@@ -33,8 +36,8 @@ public final class GetCurrentSiteHandler
         final String key = req.param( "key" ).value( String.class );
         if ( key == null )
         {
-            final PortalContext context = PortalContextAccessor.get();
-            final Site site = context.getSite();
+            final PortalRequest portalRequest = PortalRequestAccessor.get();
+            final Site site = portalRequest.getSite();
             return site != null ? convert( site ) : null;
         }
         else if ( key.startsWith( "/" ) )
@@ -64,7 +67,7 @@ public final class GetCurrentSiteHandler
     {
         try
         {
-            return convert( this.contentService.getNearestSite( key ) );
+            return convert( this.siteService.getNearestSite( key ) );
         }
         catch ( final ContentNotFoundException e )
         {
@@ -81,5 +84,11 @@ public final class GetCurrentSiteHandler
     public void setContentService( final ContentService contentService )
     {
         this.contentService = contentService;
+    }
+
+    @Reference
+    public void setSiteService( final SiteService siteService )
+    {
+        this.siteService = siteService;
     }
 }

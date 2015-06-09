@@ -18,7 +18,7 @@ public class PortalUrlServiceImpl_assetUrlTest
     public void createUrl()
     {
         final AssetUrlParams params = new AssetUrlParams().
-            context( this.context ).
+            portalRequest( this.portalRequest ).
             path( "css/my.css" );
 
         final String url = this.service.assetUrl( params );
@@ -30,7 +30,7 @@ public class PortalUrlServiceImpl_assetUrlTest
     public void createUrl_withModule()
     {
         final AssetUrlParams params = new AssetUrlParams().
-            context( this.context ).
+            portalRequest( this.portalRequest ).
             module( "othermodule" ).
             path( "css/my.css" );
 
@@ -42,7 +42,7 @@ public class PortalUrlServiceImpl_assetUrlTest
     public void createUrl_withVirtualHost()
     {
         final AssetUrlParams params = new AssetUrlParams().
-            context( this.context ).
+            portalRequest( this.portalRequest ).
             path( "css/my.css" );
 
         //Mocks a virtual host and the HTTP request

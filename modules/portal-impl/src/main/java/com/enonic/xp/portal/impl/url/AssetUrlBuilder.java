@@ -17,7 +17,7 @@ final class AssetUrlBuilder
     private ModuleKey getModule()
     {
         return new ModuleResolver().
-            context( this.context ).
+            portalRequest( this.portalRequest ).
             module( this.params.getModule() ).
             resolve();
     }
@@ -26,7 +26,7 @@ final class AssetUrlBuilder
     protected void buildUrl( final StringBuilder url, final Multimap<String, String> params )
     {
         super.buildUrl( url, params );
-        appendPart( url, this.context.getContentPath().toString() );
+        appendPart( url, this.portalRequest.getContentPath().toString() );
         appendPart( url, "_" );
         appendPart( url, "asset" );
         appendPart( url, getModule().toString() );
@@ -69,7 +69,7 @@ final class AssetUrlBuilder
         final StringBuilder regexp = new StringBuilder();
 
         //For each element of the content path, opens a non recorded group
-        final ContentPath contentPath = this.context.getContentPath();
+        final ContentPath contentPath = this.portalRequest.getContentPath();
         for ( int i = 0; i < contentPath.elementCount(); i++ )
         {
             regexp.append( "(?:" );

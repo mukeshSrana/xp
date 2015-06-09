@@ -20,14 +20,15 @@ import com.enonic.xp.content.page.region.PartComponent;
 import com.enonic.xp.content.page.region.Region;
 import com.enonic.xp.content.site.Site;
 import com.enonic.xp.data.PropertyTree;
-import com.enonic.xp.portal.PortalContext;
 import com.enonic.xp.portal.PortalRequest;
+import com.enonic.xp.portal.PortalResponse;
 import com.enonic.xp.portal.RenderMode;
 import com.enonic.xp.portal.impl.controller.ControllerScript;
 import com.enonic.xp.portal.impl.controller.ControllerScriptFactory;
 import com.enonic.xp.portal.impl.resource.base.ModuleBaseResourceTest;
 import com.enonic.xp.schema.content.ContentTypeName;
 import com.enonic.xp.security.PrincipalKey;
+import com.enonic.xp.site.SiteService;
 
 import static org.junit.Assert.*;
 
@@ -35,6 +36,8 @@ public class ServiceResourceTest
     extends ModuleBaseResourceTest
 {
     protected ContentService contentService;
+
+    protected SiteService siteService;
 
     private ControllerScript controllerScript;
 
@@ -50,8 +53,13 @@ public class ServiceResourceTest
         this.controllerScript = Mockito.mock( ControllerScript.class );
         Mockito.when( controllerScriptFactory.fromDir( Mockito.anyObject() ) ).thenReturn( this.controllerScript );
 
+        final PortalResponse portalResponse = PortalResponse.create().build();
+        Mockito.when( this.controllerScript.execute( Mockito.anyObject() ) ).thenReturn( portalResponse );
+
         this.contentService = Mockito.mock( ContentService.class );
+        this.siteService = Mockito.mock( SiteService.class );
         this.services.setContentService( this.contentService );
+        this.services.setSiteService( this.siteService );
     }
 
     @Test
@@ -64,15 +72,16 @@ public class ServiceResourceTest
 
         assertEquals( 200, response.getStatus() );
 
-        final ArgumentCaptor<PortalContext> jsContext = ArgumentCaptor.forClass( PortalContext.class );
-        Mockito.verify( this.controllerScript ).execute( jsContext.capture() );
+        final ArgumentCaptor<PortalRequest> jsRequest = ArgumentCaptor.forClass( PortalRequest.class );
+        final ArgumentCaptor<PortalResponse> jsResponse = ArgumentCaptor.forClass( PortalResponse.class );
+        Mockito.verify( this.controllerScript ).execute( jsRequest.capture() );
 
-        final PortalRequest jsHttpRequest = jsContext.getValue();
-        assertNotNull( jsHttpRequest );
-        assertEquals( "GET", jsHttpRequest.getMethod() );
-        assertEquals( RenderMode.LIVE, jsHttpRequest.getMode() );
+        final PortalRequest portalRequest = jsRequest.getValue();
+        assertNotNull( portalRequest );
+        assertEquals( "GET", portalRequest.getMethod() );
+        assertEquals( RenderMode.LIVE, portalRequest.getMode() );
 
-        final Multimap<String, String> params = jsHttpRequest.getParams();
+        final Multimap<String, String> params = portalRequest.getParams();
         assertNotNull( params );
         assertEquals( "b", params.get( "a" ).iterator().next() );
     }
@@ -87,12 +96,13 @@ public class ServiceResourceTest
 
         assertEquals( 200, response.getStatus() );
 
-        final ArgumentCaptor<PortalContext> jsContext = ArgumentCaptor.forClass( PortalContext.class );
-        Mockito.verify( this.controllerScript ).execute( jsContext.capture() );
+        final ArgumentCaptor<PortalRequest> jsRequest = ArgumentCaptor.forClass( PortalRequest.class );
+        final ArgumentCaptor<PortalResponse> jsResponse = ArgumentCaptor.forClass( PortalResponse.class );
+        Mockito.verify( this.controllerScript ).execute( jsRequest.capture() );
 
-        final PortalRequest jsHttpRequest = jsContext.getValue();
+        final PortalRequest portalRequest = jsRequest.getValue();
 
-        assertEquals( "http://localhost/portal/master/path/to/content/_/service/demo/test?a=b", jsHttpRequest.getUri() );
+        assertEquals( "http://localhost/portal/master/path/to/content/_/service/demo/test?a=b", portalRequest.getUri() );
     }
 
     @Test
@@ -106,13 +116,14 @@ public class ServiceResourceTest
 
         assertEquals( 200, response.getStatus() );
 
-        final ArgumentCaptor<PortalContext> jsContext = ArgumentCaptor.forClass( PortalContext.class );
-        Mockito.verify( this.controllerScript ).execute( jsContext.capture() );
+        final ArgumentCaptor<PortalRequest> jsRequest = ArgumentCaptor.forClass( PortalRequest.class );
+        final ArgumentCaptor<PortalResponse> jsResponse = ArgumentCaptor.forClass( PortalResponse.class );
+        Mockito.verify( this.controllerScript ).execute( jsRequest.capture() );
 
-        final PortalContext context = jsContext.getValue();
-        assertNotNull( context.getModule() );
-        assertNotNull( context.getSite() );
-        assertNotNull( context.getContent() );
+        final PortalRequest portalRequest = jsRequest.getValue();
+        assertNotNull( portalRequest.getModule() );
+        assertNotNull( portalRequest.getSite() );
+        assertNotNull( portalRequest.getContent() );
     }
 
     private void setupContentAndSite()
@@ -123,7 +134,7 @@ public class ServiceResourceTest
         Mockito.when( this.contentService.getByPath( ContentPath.from( "site/somepath/content" ).asAbsolute() ) ).
             thenReturn( content );
 
-        Mockito.when( this.contentService.getNearestSite( Mockito.isA( ContentId.class ) ) ).
+        Mockito.when( this.siteService.getNearestSite( Mockito.isA( ContentId.class ) ) ).
             thenReturn( createSite( "id", "site", "mymodule:contenttypename" ) );
 
         Mockito.when( this.contentService.getById( content.getId() ) ).

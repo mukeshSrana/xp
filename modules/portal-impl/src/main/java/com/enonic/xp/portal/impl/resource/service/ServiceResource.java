@@ -20,7 +20,7 @@ public final class ServiceResource
     public ServiceControllerResource controller( @PathParam("module") final String module, @PathParam("service") final String service )
     {
         final ModuleKey moduleKey = ModuleKey.from( module );
-        final ResourceKey scriptDir = ResourceKey.from( moduleKey, "cms/services/" + service );
+        final ResourceKey scriptDir = ResourceKey.from( moduleKey, "services/" + service );
 
         final ServiceControllerResource resource = initResource( new ServiceControllerResource() );
         resource.scriptDir = scriptDir;
@@ -80,6 +80,6 @@ public final class ServiceResource
 
     private Site getSite( final Content content )
     {
-        return this.services.getContentService().getNearestSite( content.getId() );
+        return this.services.getSiteService().getNearestSite( content.getId() );
     }
 }

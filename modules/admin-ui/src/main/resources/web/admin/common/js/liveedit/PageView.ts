@@ -47,8 +47,6 @@ module api.liveedit {
 
         private regionViews: RegionView[];
 
-        private regionIndex: number;
-
         private viewsById: {[s:number] : ItemView;};
 
         private ignorePropertyChanges: boolean;
@@ -108,7 +106,6 @@ module api.liveedit {
             this.pageModel = builder.liveEditModel.getPageModel();
 
             this.regionViews = [];
-            this.regionIndex = 0;
             this.viewsById = {};
             this.itemViewAddedListeners = [];
             this.itemViewRemovedListeners = [];
@@ -584,7 +581,6 @@ module api.liveedit {
             });
 
             this.regionViews = [];
-            this.regionIndex = 0;
             this.viewsById = {};
 
             this.doParseItemViews();
@@ -601,38 +597,39 @@ module api.liveedit {
             if (!pageRegions) {
                 return;
             }
-            var regions: Region[] = pageRegions.getRegions();
             var children = parentElement ? parentElement.getChildren() : this.getChildren();
 
             children.forEach((childElement: api.dom.Element) => {
                 var itemType = ItemType.fromElement(childElement);
                 var isRegionView = api.ObjectHelper.iFrameSafeInstanceOf(childElement, RegionView);
+                var region, regionName, regionView;
+
                 if (isRegionView) {
-                    var region = regions[this.regionIndex++];
+                    regionName = RegionItemType.getRegionName(childElement);
+                    region = pageRegions.getRegionByName(regionName);
                     if (region) {
                         // reuse existing region view
-                        var regionView = <RegionView> childElement;
+                        regionView = <RegionView> childElement;
                         // update view's data
                         regionView.setRegion(region);
                         // register it again because we unregistered everything before parsing
                         this.registerRegionView(regionView);
                     }
-                } else if (itemType) {
-                    if (RegionItemType.get().equals(itemType)) {
-                        // regions may be nested on different levels so use page wide var for count
-                        var region = regions[this.regionIndex++];
-                        if (region) {
-                            var regionView = new RegionView(new RegionViewBuilder().
-                                setLiveEditModel(this.liveEditModel).
-                                setParentView(this).
-                                setRegion(region).
-                                setElement(childElement));
 
-                            this.registerRegionView(regionView);
-                        }
-                    } else {
-                        this.doParseItemViews(childElement);
+                } else if (itemType && RegionItemType.get().equals(itemType)) {
+                    regionName = RegionItemType.getRegionName(childElement);
+                    region = pageRegions.getRegionByName(regionName);
+
+                    if (region) {
+                        regionView = new RegionView(new RegionViewBuilder().
+                            setLiveEditModel(this.liveEditModel).
+                            setParentView(this).
+                            setRegion(region).
+                            setElement(childElement));
+
+                        this.registerRegionView(regionView);
                     }
+
                 } else {
                     this.doParseItemViews(childElement);
                 }

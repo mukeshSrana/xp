@@ -125,6 +125,7 @@ import com.enonic.xp.security.RoleKeys;
 import com.enonic.xp.security.SecurityService;
 import com.enonic.xp.security.acl.AccessControlList;
 import com.enonic.xp.security.auth.AuthenticationInfo;
+import com.enonic.xp.site.SiteService;
 
 import static org.apache.commons.lang.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -150,6 +151,8 @@ public final class ContentResource
     private final static String EXPAND_NONE = "none";
 
     private ContentService contentService;
+
+    private SiteService siteService;
 
     private ContentTypeService contentTypeService;
 
@@ -183,11 +186,23 @@ public final class ContentResource
             final Content parentContent = contentService.getById( ContentId.from( parentParam ) );
             createMediaParams.parent( parentContent.getPath() );
         }
-        createMediaParams.name( form.getAsString( "name" ) );
-
         final DiskFileItem mediaFile = (DiskFileItem) form.get( "file" );
-        createMediaParams.mimeType( mediaFile.getContentType() );
-        createMediaParams.byteSource( getFileItemByteSource( mediaFile ) );
+        createMediaParams.name( form.getAsString( "name" ) ).
+            mimeType( mediaFile.getContentType() ).
+            byteSource( getFileItemByteSource( mediaFile ) );
+
+        String focalX = form.getAsString( "focalX" ),
+            focalY = form.getAsString( "focalY" );
+
+        if ( StringUtils.isNotBlank( focalX ) )
+        {
+            createMediaParams.focalX( Double.valueOf( focalX ) );
+        }
+        if ( StringUtils.isNotBlank( focalY ) )
+        {
+            createMediaParams.focalY( Double.valueOf( focalY ) );
+        }
+
         persistedContent = contentService.create( createMediaParams );
 
         return new ContentJson( persistedContent, newContentIconUrlResolver(), inlineMixinsToFormItemsTransformer, principalsResolver );
@@ -199,9 +214,21 @@ public final class ContentResource
     public ContentJson updateMedia( final MultipartForm form )
     {
         final Content persistedContent;
-        final UpdateMediaParams params = new UpdateMediaParams();
-        params.content( ContentId.from( form.getAsString( "content" ) ) );
-        params.name( form.getAsString( "name" ) );
+        final UpdateMediaParams params = new UpdateMediaParams().
+            content( ContentId.from( form.getAsString( "content" ) ) ).
+            name( form.getAsString( "name" ) );
+
+        String focalX = form.getAsString( "focalX" ),
+            focalY = form.getAsString( "focalY" );
+
+        if ( StringUtils.isNotBlank( focalX ) )
+        {
+            params.focalX( Double.valueOf( focalX ) );
+        }
+        if ( StringUtils.isNotBlank( focalY ) )
+        {
+            params.focalY( Double.valueOf( focalY ) );
+        }
 
         final DiskFileItem mediaFile = (DiskFileItem) form.get( "file" );
         params.mimeType( mediaFile.getContentType() );
@@ -439,7 +466,6 @@ public final class ContentResource
             }
         }
 
-
         //Applies the manual movements
         final ReorderChildContentsParams.Builder builder =
             ReorderChildContentsParams.create().contentId( ContentId.from( params.getContentId() ) ).silent( params.isSilent() );
@@ -523,7 +549,7 @@ public final class ContentResource
     public ContentJson getNearest( final GetNearestSiteJson params )
     {
         final ContentId contentId = params.getGetNearestSiteByContentId();
-        final Content nearestSite = this.contentService.getNearestSite( contentId );
+        final Content nearestSite = this.siteService.getNearestSite( contentId );
         if ( nearestSite != null )
         {
             return new ContentJson( nearestSite, newContentIconUrlResolver(), inlineMixinsToFormItemsTransformer, principalsResolver );
@@ -810,6 +836,12 @@ public final class ContentResource
     public void setContentService( final ContentService contentService )
     {
         this.contentService = contentService;
+    }
+
+    @Reference
+    public void setSiteService( final SiteService siteService )
+    {
+        this.siteService = siteService;
     }
 
     @Reference

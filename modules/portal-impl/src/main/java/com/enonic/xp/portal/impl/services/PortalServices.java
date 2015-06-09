@@ -4,26 +4,32 @@ import com.enonic.xp.content.ContentService;
 import com.enonic.xp.content.page.PageDescriptorService;
 import com.enonic.xp.content.page.PageTemplateService;
 import com.enonic.xp.image.ImageFilterBuilder;
+import com.enonic.xp.image.ImageScaleFunctionBuilder;
 import com.enonic.xp.module.ModuleService;
 import com.enonic.xp.portal.impl.controller.ControllerScriptFactory;
 import com.enonic.xp.portal.rendering.RendererFactory;
 import com.enonic.xp.portal.url.PortalUrlService;
+import com.enonic.xp.site.SiteService;
 
 public interface PortalServices
 {
-    public ModuleService getModuleService();
+    ModuleService getModuleService();
 
-    public ControllerScriptFactory getControllerScriptFactory();
+    ControllerScriptFactory getControllerScriptFactory();
 
-    public ContentService getContentService();
+    ContentService getContentService();
 
-    public ImageFilterBuilder getImageFilterBuilder();
+    ImageFilterBuilder getImageFilterBuilder();
 
-    public RendererFactory getRendererFactory();
+    RendererFactory getRendererFactory();
 
-    public PageTemplateService getPageTemplateService();
+    PageTemplateService getPageTemplateService();
 
-    public PageDescriptorService getPageDescriptorService();
+    PageDescriptorService getPageDescriptorService();
 
-    public PortalUrlService getPortalUrlService();
+    PortalUrlService getPortalUrlService();
+
+    SiteService getSiteService();
+
+    ImageScaleFunctionBuilder getImageScaleFunctionBuilder();
 }
