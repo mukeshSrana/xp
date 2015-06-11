@@ -54,7 +54,7 @@ public class DumpServiceImplTest
             batchSize( 10 ).
             timeout( 1 ).
             dumpPath( Paths.get( temporaryFolder.getRoot().toString(), "dump" ) ).
-            addRepositories( CTX_DEFAULT.getRepositoryId() ).
+            addRepository( CTX_DEFAULT.getRepositoryId() ).
             build() );
 
         final Stream<Path> list = Files.list( temporaryFolder.getRoot().toPath() );

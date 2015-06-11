@@ -24,6 +24,8 @@ import com.enonic.xp.repository.RepositoryId;
 
 public class DumpCommand
 {
+    public final static String DUMP_FILE_NAME = "dump.json";
+
     private final Path dumpPath;
 
     private final List<RepositoryId> repositoryIdList;
@@ -36,13 +38,13 @@ public class DumpCommand
 
     private final DumpJsonSerializer serializer = DumpJsonSerializer.create( false );
 
-    private DumpCommand( Builder builder )
+    private DumpCommand( final Builder builder )
     {
-        dumpPath = builder.path;
-        repositoryIdList = builder.repositoryIdList;
-        scrollSize = builder.scrollSize;
-        openTimeSeconds = builder.openTimeSeconds;
-        indexService = builder.indexService;
+        this.dumpPath = builder.path;
+        this.repositoryIdList = builder.repositoryIdList;
+        this.scrollSize = builder.scrollSize;
+        this.openTimeSeconds = builder.openTimeSeconds;
+        this.indexService = builder.indexService;
     }
 
     public static Builder create()
@@ -81,10 +83,10 @@ public class DumpCommand
             build() );
 
         final Writer writer = createWriter( repositoryId, indexType );
+
         doScroll( scrollResult.getScrollId(), writer );
 
         IOUtils.closeQuietly( writer );
-
     }
 
     private void doScroll( final String scrollId, final Writer writer )
@@ -121,7 +123,7 @@ public class DumpCommand
         try
         {
             Files.createDirectories( storagePath );
-            return Files.newBufferedWriter( Paths.get( storagePath.toString(), indexType ), Charsets.UTF_8 );
+            return Files.newBufferedWriter( Paths.get( storagePath.toString(), DUMP_FILE_NAME ), Charsets.UTF_8 );
         }
         catch ( IOException e )
         {

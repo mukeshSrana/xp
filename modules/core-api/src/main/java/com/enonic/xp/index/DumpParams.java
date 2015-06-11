@@ -54,9 +54,9 @@ public class DumpParams
     {
         private List<RepositoryId> repositoryIds = Lists.newArrayList();
 
-        private int batchSize;
+        private int batchSize = 1000;
 
-        private int timeout;
+        private int timeout = 2;
 
         private Path dumpPath;
 
@@ -70,7 +70,7 @@ public class DumpParams
             return this;
         }
 
-        public Builder addRepositories( final RepositoryId repositoryId )
+        public Builder addRepository( final RepositoryId repositoryId )
         {
             this.repositoryIds.add( repositoryId );
             return this;
