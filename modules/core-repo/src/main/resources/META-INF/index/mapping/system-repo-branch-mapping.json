@@ -18,19 +18,28 @@
     "properties": {
       "versionid": {
         "type": "string",
-        "index": "not_analyzed"
-      },
-      "workspace": {
-        "type": "string",
-        "index": "not_analyzed"
+        "index": "not_analyzed",
+        "store": "true"
       },
       "status": {
         "type": "string",
-        "index": "not_analyzed"
+        "index": "not_analyzed",
+        "store": "true"
       },
       "path": {
         "type": "string",
-        "index": "not_analyzed"
+        "index": "not_analyzed",
+        "store": "true"
+      },
+      "state": {
+        "type": "string",
+        "index": "not_analyzed",
+        "store": "true"
+      },
+      "branch": {
+        "type": "string",
+        "index": "not_analyzed",
+        "store": "true"
       }
     }
   }

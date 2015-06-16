@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 
 import com.enonic.xp.repository.RepositoryId;
 
-public class DumpParams
+public class DumpDataParams
 {
     private final List<RepositoryId> repositoryIds;
 
@@ -17,7 +17,7 @@ public class DumpParams
 
     private final Path dumpPath;
 
-    private DumpParams( Builder builder )
+    private DumpDataParams( Builder builder )
     {
         repositoryIds = builder.repositoryIds;
         batchSize = builder.batchSize;
@@ -94,9 +94,9 @@ public class DumpParams
             return this;
         }
 
-        public DumpParams build()
+        public DumpDataParams build()
         {
-            return new DumpParams( this );
+            return new DumpDataParams( this );
         }
     }
 }

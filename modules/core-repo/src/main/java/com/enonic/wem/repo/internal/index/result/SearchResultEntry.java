@@ -83,7 +83,7 @@ public class SearchResultEntry
 
         if ( failOnMissing && searchResultFieldValue == null )
         {
-            throw new RuntimeException( "Expected field " + normalizedFieldName + " in result not found" );
+            throw new RuntimeException( "Expected field '" + normalizedFieldName + "' in result not found" );
         }
 
         return searchResultFieldValue;

@@ -1,4 +1,4 @@
-package com.enonic.wem.repo.internal.dumper;
+package com.enonic.wem.repo.internal.systemexport;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -7,14 +7,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.codehaus.jparsec.util.Lists;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
 import com.enonic.wem.repo.internal.elasticsearch.ScanAndScrollParams;
-import com.enonic.wem.repo.internal.index.IndexServiceInternal;
 import com.enonic.wem.repo.internal.index.result.ScrollResult;
 import com.enonic.wem.repo.internal.index.result.SearchResultEntries;
 import com.enonic.wem.repo.internal.index.result.SearchResultEntry;
@@ -22,10 +20,9 @@ import com.enonic.wem.repo.internal.repository.IndexNameResolver;
 import com.enonic.xp.index.IndexType;
 import com.enonic.xp.repository.RepositoryId;
 
-public class DumpCommand
+public class SystemDataDumpCommand
+    extends AbstractSystemDataCommand
 {
-    public final static String DUMP_FILE_NAME = "dump.json";
-
     private final Path dumpPath;
 
     private final List<RepositoryId> repositoryIdList;
@@ -34,17 +31,14 @@ public class DumpCommand
 
     private final int openTimeSeconds;
 
-    private final IndexServiceInternal indexService;
-
-    private final DumpJsonSerializer serializer = DumpJsonSerializer.create( false );
-
-    private DumpCommand( final Builder builder )
+    private SystemDataDumpCommand( final Builder builder )
     {
+        super( builder );
         this.dumpPath = builder.path;
         this.repositoryIdList = builder.repositoryIdList;
         this.scrollSize = builder.scrollSize;
         this.openTimeSeconds = builder.openTimeSeconds;
-        this.indexService = builder.indexService;
+
     }
 
     public static Builder create()
@@ -54,10 +48,7 @@ public class DumpCommand
 
     public void execute()
     {
-        for ( final RepositoryId repositoryId : this.repositoryIdList )
-        {
-            dumpRepository( repositoryId );
-        }
+        this.repositoryIdList.forEach( this::dumpRepository );
     }
 
     private void dumpRepository( final RepositoryId repositoryId )
@@ -69,29 +60,29 @@ public class DumpCommand
     {
         final String storageIndex = IndexNameResolver.resolveStorageIndexName( repositoryId );
 
-        dumpType( storageIndex, IndexType.BRANCH.getName(), repositoryId );
-        dumpType( storageIndex, IndexType.VERSION.getName(), repositoryId );
+        dumpType( storageIndex, IndexType.BRANCH, repositoryId );
+        dumpType( storageIndex, IndexType.VERSION, repositoryId );
     }
 
-    private void dumpType( final String indexName, final String indexType, final RepositoryId repositoryId )
+    private void dumpType( final String indexName, final IndexType indexType, final RepositoryId repositoryId )
     {
-        final ScrollResult scrollResult = this.indexService.startScanScroll( ScanAndScrollParams.create().
+        final ScrollResult scrollResult = this.internalIndexService.startScanScroll( ScanAndScrollParams.create().
             index( indexName ).
-            type( indexType ).
+            type( indexType.getName() ).
             size( this.scrollSize ).
             keepAliveSecond( this.openTimeSeconds ).
             build() );
 
-        final Writer writer = createWriter( repositoryId, indexType );
+        final DumpWriter dumpWriter = createDumpWriter( repositoryId, indexType );
 
-        doScroll( scrollResult.getScrollId(), writer );
+        doScroll( scrollResult.getScrollId(), dumpWriter );
 
-        IOUtils.closeQuietly( writer );
+        dumpWriter.close();
     }
 
-    private void doScroll( final String scrollId, final Writer writer )
+    private void doScroll( final String scrollId, final DumpWriter writer )
     {
-        final ScrollResult result = this.indexService.nextScanScroll( scrollId, this.openTimeSeconds );
+        final ScrollResult result = this.internalIndexService.nextScanScroll( scrollId, this.openTimeSeconds );
 
         if ( result.getHits().getSize() > 0 )
         {
@@ -101,24 +92,31 @@ public class DumpCommand
         }
     }
 
-    private void write( final SearchResultEntries entries, final Writer writer )
+    private DumpWriter createDumpWriter( final RepositoryId repositoryId, final IndexType indexType )
+    {
+        switch ( indexType )
+        {
+            case VERSION:
+                return new DumpWriter( this.versionSerializer, createWriter( repositoryId, indexType ) );
+            case BRANCH:
+                return new DumpWriter( this.branchSerializer, createWriter( repositoryId, indexType ) );
+            default:
+                throw new IllegalArgumentException( "Cannot serialize index of type: " + indexType.getName() );
+        }
+
+    }
+
+    private void write( final SearchResultEntries entries, final DumpWriter writer )
     {
         for ( final SearchResultEntry entry : entries )
         {
-            try
-            {
-                writer.write( this.serializer.toString( entry ) );
-            }
-            catch ( Exception e )
-            {
-                throw new RuntimeException( "not able to serialize entry: " + entry );
-            }
+            writer.write( entry );
         }
     }
 
-    private Writer createWriter( final RepositoryId repositoryId, final String indexType )
+    private Writer createWriter( final RepositoryId repositoryId, final IndexType indexType )
     {
-        final Path storagePath = Paths.get( this.dumpPath.toString(), repositoryId.toString(), indexType );
+        final Path storagePath = Paths.get( this.dumpPath.toString(), repositoryId.toString(), indexType.getName() );
 
         try
         {
@@ -131,7 +129,8 @@ public class DumpCommand
         }
     }
 
-    public static final class Builder
+    public static class Builder
+        extends AbstractSystemDataCommand.Builder<Builder>
     {
         private Path path;
 
@@ -140,8 +139,6 @@ public class DumpCommand
         private int scrollSize = 1000;
 
         private int openTimeSeconds = 2;
-
-        private IndexServiceInternal indexService;
 
         private Builder()
         {
@@ -177,11 +174,6 @@ public class DumpCommand
             return this;
         }
 
-        public Builder indexService( IndexServiceInternal indexService )
-        {
-            this.indexService = indexService;
-            return this;
-        }
 
         private void validate()
         {
@@ -190,10 +182,10 @@ public class DumpCommand
             Preconditions.checkNotNull( repositoryIdList, "Repositories to dump must be given" );
         }
 
-        public DumpCommand build()
+        public SystemDataDumpCommand build()
         {
             validate();
-            return new DumpCommand( this );
+            return new SystemDataDumpCommand( this );
         }
     }
 }

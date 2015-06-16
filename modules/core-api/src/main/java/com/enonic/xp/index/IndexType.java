@@ -14,4 +14,25 @@ public enum IndexType
         return this.name().toLowerCase();
     }
 
+
+    public static IndexType fromString( final String name )
+    {
+        if ( SEARCH.getName().equals( name ) )
+        {
+            return SEARCH;
+        }
+
+        if ( BRANCH.getName().equals( name ) )
+        {
+            return BRANCH;
+        }
+
+        if ( VERSION.getName().equals( name ) )
+        {
+            return VERSION;
+        }
+
+        throw new IllegalArgumentException( "Cannot map value '" + name + "' to IndexType" );
+    }
+
 }

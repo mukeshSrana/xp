@@ -8,11 +8,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
-import com.enonic.xp.index.IndexType;
-import com.enonic.xp.repository.RepositoryId;
 import com.enonic.wem.repo.internal.elasticsearch.ClusterHealthStatus;
 import com.enonic.wem.repo.internal.elasticsearch.ClusterStatusCode;
 import com.enonic.wem.repo.internal.index.IndexServiceInternal;
+import com.enonic.xp.index.IndexType;
+import com.enonic.xp.repository.RepositoryId;
 
 public final class RepositoryInitializer
 {
@@ -27,9 +27,19 @@ public final class RepositoryInitializer
         this.indexServiceInternal = indexServiceInternal;
     }
 
+    public void initializeRepository( final RepositoryId repositoryId, final boolean force )
+    {
+        doInitializeRepository( repositoryId, force );
+    }
+
     public void initializeRepository( final RepositoryId repositoryId )
     {
-        if ( !isInitialized( repositoryId ) )
+        doInitializeRepository( repositoryId, false );
+    }
+
+    private void doInitializeRepository( final RepositoryId repositoryId, final boolean force )
+    {
+        if ( force || !isInitialized( repositoryId ) )
         {
             doInitializeRepo( repositoryId );
         }

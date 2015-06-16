@@ -15,18 +15,18 @@ import com.google.common.base.Preconditions;
 
 import com.enonic.xp.admin.impl.AdminResource;
 import com.enonic.xp.admin.impl.rest.resource.ResourceConstants;
-import com.enonic.xp.index.DumpParams;
-import com.enonic.xp.index.DumpService;
+import com.enonic.xp.index.DumpDataParams;
+import com.enonic.xp.index.SystemExportService;
 import com.enonic.xp.security.RoleKeys;
 
-@Path(ResourceConstants.REST_ROOT + "repo")
+@Path(ResourceConstants.REST_ROOT + "system")
 @Produces(MediaType.APPLICATION_JSON)
 @RolesAllowed(RoleKeys.ADMIN_ID)
 @Component(immediate = true)
-public class DumpResource
+public class SystemDataResource
     implements AdminResource
 {
-    private DumpService dumpService;
+    private SystemExportService systemExportService;
 
     private static final int DEFAULT_BATCH_SIZE = 1000;
 
@@ -34,11 +34,11 @@ public class DumpResource
 
     @POST
     @Path("dump")
-    public void reindex( final DumpRequestJson request )
+    public void dump( final DumpRequestJson request )
     {
         Preconditions.checkNotNull( request, "no request json provided" );
 
-        this.dumpService.dump( DumpParams.create().
+        this.systemExportService.dump( DumpDataParams.create().
             setRepositories( request.getRepositoryIds() ).
             dumpPath( Paths.get( "dump" ) ).
             batchSize( request.getBatchSize() != null ? request.getBatchSize() : DEFAULT_BATCH_SIZE ).
@@ -47,8 +47,8 @@ public class DumpResource
     }
 
     @Reference
-    public void setDumpService( final DumpService dumpService )
+    public void setSystemExportService( final SystemExportService systemExportService )
     {
-        this.dumpService = dumpService;
+        this.systemExportService = systemExportService;
     }
 }

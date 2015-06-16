@@ -3,6 +3,9 @@ package com.enonic.wem.repo.internal.index;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.enonic.wem.repo.internal.entity.AbstractNodeTest;
+import com.enonic.wem.repo.internal.entity.GetNodeByIdCommand;
+import com.enonic.wem.repo.internal.entity.PushNodesCommand;
 import com.enonic.xp.index.PurgeIndexParams;
 import com.enonic.xp.index.ReindexParams;
 import com.enonic.xp.index.ReindexResult;
@@ -11,9 +14,6 @@ import com.enonic.xp.node.Node;
 import com.enonic.xp.node.NodeId;
 import com.enonic.xp.node.NodeIds;
 import com.enonic.xp.node.NodePath;
-import com.enonic.wem.repo.internal.entity.AbstractNodeTest;
-import com.enonic.wem.repo.internal.entity.GetNodeByIdCommand;
-import com.enonic.wem.repo.internal.entity.PushNodesCommand;
 
 import static org.junit.Assert.*;
 
@@ -152,7 +152,7 @@ public class IndexServiceImplTest
         assertNotNull( CTX_OTHER.callWith( () -> getNodeById( node.id() ) ) );
     }
 
-    private Node getNodeById( final NodeId nodeId )
+    protected Node getNodeById( final NodeId nodeId )
     {
         return GetNodeByIdCommand.create().
             id( nodeId ).

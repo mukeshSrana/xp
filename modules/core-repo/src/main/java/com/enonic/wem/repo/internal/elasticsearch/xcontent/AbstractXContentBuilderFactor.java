@@ -5,7 +5,7 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 
 import com.enonic.wem.repo.internal.index.IndexValueNormalizer;
 
-abstract class AbstractXContentBuilderFactor
+public abstract class AbstractXContentBuilderFactor
 {
 
     static XContentBuilder startBuilder()

@@ -210,7 +210,7 @@ public abstract class AbstractNodeTest
         return createdNode;
     }
 
-    Node getNodeById( final NodeId nodeId )
+    protected Node getNodeById( final NodeId nodeId )
     {
         return GetNodeByIdCommand.create().
             versionService( this.versionService ).
@@ -225,7 +225,7 @@ public abstract class AbstractNodeTest
             execute();
     }
 
-    Node getNodeByPath( final NodePath nodePath )
+    protected Node getNodeByPath( final NodePath nodePath )
     {
         return GetNodeByPathCommand.create().
             versionService( this.versionService ).
@@ -241,7 +241,7 @@ public abstract class AbstractNodeTest
     }
 
 
-    FindNodesByParentResult findByParent( final FindNodesByParentParams params )
+    protected FindNodesByParentResult findByParent( final FindNodesByParentParams params )
     {
         return FindNodesByParentCommand.create().
             params( params ).

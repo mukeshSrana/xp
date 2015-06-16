@@ -1,4 +1,4 @@
-package com.enonic.wem.repo.internal.dumper;
+package com.enonic.wem.repo.internal.systemexport;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,19 +11,21 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.enonic.wem.repo.internal.entity.AbstractNodeTest;
-import com.enonic.xp.index.DumpParams;
+import com.enonic.wem.repo.internal.index.IndexServiceImpl;
+import com.enonic.xp.index.DumpDataParams;
+import com.enonic.xp.index.LoadDataParams;
 import com.enonic.xp.node.CreateNodeParams;
 import com.enonic.xp.node.NodePath;
 
 import static junit.framework.TestCase.assertTrue;
 
-public class DumpServiceImplTest
+public class SystemExportServiceImplTest
     extends AbstractNodeTest
 {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private DumpServiceImpl dumpService;
+    private SystemExportServiceImpl dumpService;
 
     @Override
     @Before
@@ -32,8 +34,17 @@ public class DumpServiceImplTest
     {
         super.setUp();
 
-        dumpService = new DumpServiceImpl();
+        dumpService = new SystemExportServiceImpl();
         dumpService.setIndexServiceInternal( this.indexServiceInternal );
+
+        dumpService.setElasticsearchDao( this.elasticsearchDao );
+
+        IndexServiceImpl indexService = new IndexServiceImpl();
+        indexService.setBranchService( this.branchService );
+        indexService.setIndexServiceInternal( this.indexServiceInternal );
+        indexService.setNodeDao( this.nodeDao );
+
+        dumpService.setIndexService( indexService );
     }
 
     @Test
@@ -50,10 +61,12 @@ public class DumpServiceImplTest
                 build() );
         }
 
-        this.dumpService.dump( DumpParams.create().
+        final Path dumpRoot = Paths.get( temporaryFolder.getRoot().toString(), "dump" );
+
+        this.dumpService.dump( DumpDataParams.create().
             batchSize( 10 ).
             timeout( 1 ).
-            dumpPath( Paths.get( temporaryFolder.getRoot().toString(), "dump" ) ).
+            dumpPath( dumpRoot ).
             addRepository( CTX_DEFAULT.getRepositoryId() ).
             build() );
 
@@ -62,8 +75,14 @@ public class DumpServiceImplTest
 
         assertTrue( Files.exists( Paths.get( temporaryFolder.getRoot().toString(), "dump", "cms-repo", "branch" ) ) );
         assertTrue( Files.exists( Paths.get( temporaryFolder.getRoot().toString(), "dump", "cms-repo", "version" ) ) );
+
+        this.dumpService.load( LoadDataParams.create().
+            batchSize( 10 ).
+            dumpRoot( dumpRoot ).
+            build() );
+
+        printBranchIndex();
+        printVersionIndex();
     }
-
-
 }
 
