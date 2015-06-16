@@ -1,7 +1,7 @@
 package com.enonic.wem.repo.internal.systemexport;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -14,8 +14,6 @@ import com.google.common.base.Preconditions;
 
 import com.enonic.wem.repo.internal.elasticsearch.ScanAndScrollParams;
 import com.enonic.wem.repo.internal.index.result.ScrollResult;
-import com.enonic.wem.repo.internal.index.result.SearchResultEntries;
-import com.enonic.wem.repo.internal.index.result.SearchResultEntry;
 import com.enonic.wem.repo.internal.repository.IndexNameResolver;
 import com.enonic.xp.index.IndexType;
 import com.enonic.xp.repository.RepositoryId;
@@ -86,7 +84,7 @@ public class SystemDataDumpCommand
 
         if ( result.getHits().getSize() > 0 )
         {
-            write( result.getHits(), writer );
+            writer.write( result.getHits() );
 
             doScroll( result.getScrollId(), writer );
         }
@@ -103,25 +101,20 @@ public class SystemDataDumpCommand
             default:
                 throw new IllegalArgumentException( "Cannot serialize index of type: " + indexType.getName() );
         }
-
     }
 
-    private void write( final SearchResultEntries entries, final DumpWriter writer )
+    private BufferedWriter createWriter( final RepositoryId repositoryId, final IndexType indexType )
     {
-        for ( final SearchResultEntry entry : entries )
-        {
-            writer.write( entry );
-        }
-    }
-
-    private Writer createWriter( final RepositoryId repositoryId, final IndexType indexType )
-    {
-        final Path storagePath = Paths.get( this.dumpPath.toString(), repositoryId.toString(), indexType.getName() );
+        final Path storagePath =
+            Paths.get( this.dumpPath.toString(), repositoryId.toString(), IndexNameResolver.resolveStorageIndexName( repositoryId ),
+                       indexType.getName() );
 
         try
         {
             Files.createDirectories( storagePath );
-            return Files.newBufferedWriter( Paths.get( storagePath.toString(), DUMP_FILE_NAME ), Charsets.UTF_8 );
+            final BufferedWriter bufferedWriter =
+                Files.newBufferedWriter( Paths.get( storagePath.toString(), DUMP_FILE_NAME ), Charsets.UTF_8 );
+            return bufferedWriter;
         }
         catch ( IOException e )
         {

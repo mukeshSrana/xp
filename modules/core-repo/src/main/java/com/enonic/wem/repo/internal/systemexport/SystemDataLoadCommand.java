@@ -1,6 +1,6 @@
 package com.enonic.wem.repo.internal.systemexport;
 
-import java.nio.file.Path;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import com.enonic.wem.repo.internal.elasticsearch.ElasticsearchDao;
+import com.enonic.wem.repo.internal.repository.IndexNameResolver;
 import com.enonic.wem.repo.internal.repository.RepositoryInitializer;
 import com.enonic.xp.branch.Branch;
 import com.enonic.xp.index.IndexService;
@@ -16,12 +17,11 @@ import com.enonic.xp.index.ReindexParams;
 import com.enonic.xp.repository.RepositoryId;
 import com.enonic.xp.vfs.VirtualFile;
 import com.enonic.xp.vfs.VirtualFilePath;
-import com.enonic.xp.vfs.VirtualFiles;
 
 public class SystemDataLoadCommand
     extends AbstractSystemDataCommand
 {
-    private final Path dumpPath;
+    private final VirtualFile dumpPath;
 
     private final int scrollSize;
 
@@ -46,10 +46,9 @@ public class SystemDataLoadCommand
 
     public void execute()
     {
-        final VirtualFile vfRoot = VirtualFiles.from( dumpPath );
-        Preconditions.checkArgument( vfRoot.exists(), "Cannot find dump-root at path " + dumpPath );
+        Preconditions.checkArgument( dumpPath.exists(), "Cannot find dump-root at path " + dumpPath.getPath() );
 
-        vfRoot.getChildren().forEach( this::handleRepo );
+        dumpPath.getChildren().forEach( this::handleRepo );
     }
 
     private void handleRepo( final VirtualFile repoFolder )
@@ -60,19 +59,29 @@ public class SystemDataLoadCommand
 
         repositoryInitializer.initializeRepository( RepositoryId.from( repoName ), true );
 
-        readDump( repoFolder );
+        readRepoFolder( repoFolder );
 
+        internalIndexService.refresh( IndexNameResolver.resolveStorageIndexName( RepositoryId.from( repoName ) ) );
+
+        // TODO: Reindex all branches, not hardcoded
         indexService.reindex( ReindexParams.create().
             addBranch( Branch.from( "draft" ) ).
             addBranch( Branch.from( "master" ) ).
             initialize( false ).
             repositoryId( RepositoryId.from( repoName ) ).
             build() );
+
+        internalIndexService.refresh( IndexNameResolver.resolveSearchIndexName( RepositoryId.from( repoName ) ) );
     }
 
-    private void readDump( final VirtualFile repoFolder )
+    private void readRepoFolder( final VirtualFile repoFolder )
     {
-        repoFolder.getChildren().forEach( ( typeFolder ) -> handleType( typeFolder, repoFolder.getName() ) );
+        final List<VirtualFile> indexFolders = repoFolder.getChildren();
+
+        for ( final VirtualFile indexFolder : indexFolders )
+        {
+            indexFolder.getChildren().forEach( ( typeFolder ) -> handleType( typeFolder, repoFolder.getName() ) );
+        }
     }
 
     private void handleType( final VirtualFile typeFolder, final String repoName )
@@ -133,7 +142,7 @@ public class SystemDataLoadCommand
     public static final class Builder
         extends AbstractSystemDataCommand.Builder<Builder>
     {
-        private Path dumpPath;
+        private VirtualFile dumpPath;
 
         private int scrollSize;
 
@@ -147,7 +156,7 @@ public class SystemDataLoadCommand
         {
         }
 
-        public Builder dumpRoot( Path dumpPath )
+        public Builder dumpRoot( VirtualFile dumpPath )
         {
             this.dumpPath = dumpPath;
             return this;

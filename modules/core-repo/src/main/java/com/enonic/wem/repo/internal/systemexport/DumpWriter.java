@@ -1,28 +1,39 @@
 package com.enonic.wem.repo.internal.systemexport;
 
-import java.io.Writer;
+import java.io.BufferedWriter;
 
 import org.apache.commons.io.IOUtils;
 
+import com.enonic.wem.repo.internal.index.result.SearchResultEntries;
 import com.enonic.wem.repo.internal.index.result.SearchResultEntry;
 
 public final class DumpWriter
 {
-    private final Writer writer;
+    private final BufferedWriter writer;
 
     private final DumpSerializer dumpSerializer;
 
-    public DumpWriter( final DumpSerializer dumpSerializer, final Writer writer )
+    public DumpWriter( final DumpSerializer dumpSerializer, final BufferedWriter writer )
     {
         this.dumpSerializer = dumpSerializer;
         this.writer = writer;
     }
 
-    public void write(final SearchResultEntry entry)
+    public void write( final SearchResultEntries entries )
+    {
+        for ( final SearchResultEntry entry : entries )
+        {
+            writeEntry( entry );
+        }
+    }
+
+    private void writeEntry( final SearchResultEntry entry )
     {
         try
         {
-            writer.write( this.dumpSerializer.toString( entry ) );
+            final String source = this.dumpSerializer.toString( entry );
+            writer.write( source );
+            writer.newLine();
         }
         catch ( Exception e )
         {
@@ -33,6 +44,5 @@ public final class DumpWriter
     public void close()
     {
         IOUtils.closeQuietly( this.writer );
-
     }
 }

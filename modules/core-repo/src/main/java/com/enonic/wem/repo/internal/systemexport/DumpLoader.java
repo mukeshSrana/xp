@@ -60,8 +60,7 @@ public class DumpLoader
 
         final IndexRequest indexRequest = entryFactory.create( this.repositoryId, json );
 
-        final String id = elasticsearchDao.store( indexRequest );
-        System.out.println( "Stored id: " + id );
+        elasticsearchDao.store( indexRequest );
     }
 
     public static Builder create()

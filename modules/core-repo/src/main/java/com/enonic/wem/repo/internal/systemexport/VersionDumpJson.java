@@ -3,10 +3,14 @@ package com.enonic.wem.repo.internal.systemexport;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.enonic.wem.repo.internal.index.result.SearchResultEntry;
+import com.enonic.wem.repo.internal.version.VersionIndexPath;
 
 public class VersionDumpJson
     extends AbstractDumpJson
 {
+    @JsonProperty("_id")
+    public String id;
+
     @JsonProperty("versionId")
     public String versionId;
 
@@ -43,9 +47,11 @@ public class VersionDumpJson
     {
         final VersionDumpJson versionDumpJson = new VersionDumpJson();
 
-        versionDumpJson.versionId = searchResultEntry.getId();
-        versionDumpJson.nodeId = searchResultEntry.getId();
-        versionDumpJson.timestamp = getStringValue( searchResultEntry, "timestamp" );
+        versionDumpJson.id = searchResultEntry.getId();
+        versionDumpJson.versionId = getStringValue( searchResultEntry, VersionIndexPath.VERSION_ID.getPath() );
+        versionDumpJson.nodeId = getStringValue( searchResultEntry, VersionIndexPath.NODE_ID.getPath() );
+        versionDumpJson.timestamp = getStringValue( searchResultEntry, VersionIndexPath.TIMESTAMP.getPath() );
+        versionDumpJson.nodePath = getStringValue( searchResultEntry, VersionIndexPath.NODE_PATH.getPath() );
 
         return versionDumpJson;
     }

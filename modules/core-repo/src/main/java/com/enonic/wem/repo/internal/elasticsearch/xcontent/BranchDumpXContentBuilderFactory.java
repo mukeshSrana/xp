@@ -1,5 +1,7 @@
 package com.enonic.wem.repo.internal.elasticsearch.xcontent;
 
+import java.time.Instant;
+
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import com.enonic.wem.repo.internal.elasticsearch.branch.BranchIndexPath;
@@ -17,10 +19,11 @@ public class BranchDumpXContentBuilderFactory
             final XContentBuilder builder = startBuilder();
 
             addField( builder, BranchIndexPath.VERSION_ID.getPath(), branchDumpJson.getVersionId() );
+            addField( builder, BranchIndexPath.BRANCH_NAME.getPath(), branchDumpJson.getBranch() );
+            addField( builder, BranchIndexPath.TIMESTAMP.getPath(), Instant.parse( branchDumpJson.getTimestamp() ) );
             addField( builder, BranchIndexPath.NODE_ID.getPath(), branchDumpJson.getNodeId() );
-            addField( builder, BranchIndexPath.TIMESTAMP.getPath(), branchDumpJson.getTimestamp() );
             addField( builder, BranchIndexPath.STATE.getPath(), branchDumpJson.getState() );
-            addField( builder, BranchIndexPath.ROUTING.getPath(), branchDumpJson.getRouting() );
+            addField( builder, BranchIndexPath.PATH.getPath(), branchDumpJson.getPath() );
 
             endBuilder( builder );
             return builder;

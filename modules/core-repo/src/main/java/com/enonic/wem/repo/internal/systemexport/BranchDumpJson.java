@@ -5,8 +5,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.enonic.wem.repo.internal.elasticsearch.branch.BranchIndexPath;
 import com.enonic.wem.repo.internal.index.result.SearchResultEntry;
 
-public class BranchDumpJson extends AbstractDumpJson
+public class BranchDumpJson
+    extends AbstractDumpJson
 {
+    @JsonProperty("_id")
+    public String id;
+
     @JsonProperty("_timestamp")
     public String timestamp;
 
@@ -64,13 +68,19 @@ public class BranchDumpJson extends AbstractDumpJson
         return routing;
     }
 
+    public String getId()
+    {
+        return id;
+    }
+
     public static BranchDumpJson toJson( final SearchResultEntry searchResultEntry )
     {
         final BranchDumpJson branchDumpJson = new BranchDumpJson();
 
+        branchDumpJson.id = searchResultEntry.getId();
         branchDumpJson.branch = getStringValue( searchResultEntry, BranchIndexPath.BRANCH_NAME.getPath() );
         branchDumpJson.versionId = getStringValue( searchResultEntry, BranchIndexPath.VERSION_ID.getPath() );
-        branchDumpJson.nodeId = searchResultEntry.getId();
+        branchDumpJson.nodeId = getStringValue( searchResultEntry, BranchIndexPath.NODE_ID.getPath() );
         branchDumpJson.state = getStringValue( searchResultEntry, BranchIndexPath.STATE.getPath() );
         branchDumpJson.path = getStringValue( searchResultEntry, BranchIndexPath.PATH.getPath() );
         branchDumpJson.routing = getStringValue( searchResultEntry, BranchIndexPath.ROUTING.getPath() );

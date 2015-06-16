@@ -16,8 +16,10 @@ import com.google.common.base.Preconditions;
 import com.enonic.xp.admin.impl.AdminResource;
 import com.enonic.xp.admin.impl.rest.resource.ResourceConstants;
 import com.enonic.xp.index.DumpDataParams;
+import com.enonic.xp.index.LoadDataParams;
 import com.enonic.xp.index.SystemExportService;
 import com.enonic.xp.security.RoleKeys;
+import com.enonic.xp.vfs.VirtualFiles;
 
 @Path(ResourceConstants.REST_ROOT + "system")
 @Produces(MediaType.APPLICATION_JSON)
@@ -45,6 +47,20 @@ public class SystemDataResource
             timeout( request.getTimeout() != null ? request.getTimeout() : DEFAULT_TIMEOUT ).
             build() );
     }
+
+
+    @POST
+    @Path("load")
+    public void load( final LoadDataRequestJson request )
+    {
+        Preconditions.checkNotNull( request, "no request json provided" );
+
+        this.systemExportService.load( LoadDataParams.create().
+            batchSize( 100 ).
+            dumpRoot( VirtualFiles.from( Paths.get( request.getDumpRoot() ) )).
+            build() );
+    }
+
 
     @Reference
     public void setSystemExportService( final SystemExportService systemExportService )

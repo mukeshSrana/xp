@@ -55,6 +55,15 @@ public abstract class AbstractElasticsearchIntegrationTest
 
     protected void printAllIndexContent( final String indexName, final String indexType )
     {
+        final SearchResponse searchResponse = getAllIndexContent( indexName, indexType );
+
+        System.out.println( "\n\n---------- CONTENT --------------------------------" );
+        System.out.println( searchResponse.toString() );
+        System.out.println( "\n\n" );
+    }
+
+    protected SearchResponse getAllIndexContent( final String indexName, final String indexType )
+    {
         String termQuery = "{\n" +
             "  \"query\": { \"match_all\": {} }\n" +
             "}";
@@ -66,11 +75,7 @@ public abstract class AbstractElasticsearchIntegrationTest
             setSource( termQuery ).
             addFields( "_source", "_parent" );
 
-        final SearchResponse searchResponse = this.client.search( searchRequest.request() ).actionGet();
-
-        System.out.println( "\n\n---------- CONTENT --------------------------------" );
-        System.out.println( searchResponse.toString() );
-        System.out.println( "\n\n" );
+        return this.client.search( searchRequest.request() ).actionGet();
     }
 
     String getContentRepoSearchDefaultSettings()

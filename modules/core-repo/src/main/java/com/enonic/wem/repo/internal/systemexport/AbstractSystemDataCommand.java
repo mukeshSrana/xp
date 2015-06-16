@@ -4,7 +4,7 @@ import com.enonic.wem.repo.internal.index.IndexServiceInternal;
 
 public abstract class AbstractSystemDataCommand
 {
-    protected final static String DUMP_FILE_NAME = "dump.json";
+    final static String DUMP_FILE_NAME = "dump.json";
 
     protected final BranchDumpSerializer branchSerializer = BranchDumpSerializer.create( false );
 

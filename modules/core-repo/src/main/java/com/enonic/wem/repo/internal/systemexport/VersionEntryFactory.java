@@ -19,10 +19,11 @@ public class VersionEntryFactory
     {
         Preconditions.checkArgument( json instanceof VersionDumpJson );
 
-        final VersionDumpJson versionDump = (VersionDumpJson) json;
+        final VersionDumpJson versionDumpJson = (VersionDumpJson) json;
 
         return new IndexRequest( IndexNameResolver.resolveStorageIndexName( repositoryId ) ).
             type( IndexType.VERSION.getName() ).
-            source( VersionDumpXContentBuilderFactory.create( versionDump ) );
+            id( versionDumpJson.id ).
+            source( VersionDumpXContentBuilderFactory.create( versionDumpJson ) );
     }
 }

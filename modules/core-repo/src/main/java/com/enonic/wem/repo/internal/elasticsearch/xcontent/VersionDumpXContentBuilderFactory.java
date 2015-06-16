@@ -1,5 +1,7 @@
 package com.enonic.wem.repo.internal.elasticsearch.xcontent;
 
+import java.time.Instant;
+
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import com.enonic.wem.repo.internal.index.IndexException;
@@ -18,7 +20,7 @@ public class VersionDumpXContentBuilderFactory
 
             addField( builder, VersionIndexPath.VERSION_ID.getPath(), versionDumpJson.getVersionId() );
             addField( builder, VersionIndexPath.NODE_ID.getPath(), versionDumpJson.getNodeId() );
-            addField( builder, VersionIndexPath.TIMESTAMP.getPath(), versionDumpJson.getTimestamp() );
+            addField( builder, VersionIndexPath.TIMESTAMP.getPath(), Instant.parse( versionDumpJson.getTimestamp() ) );
             addField( builder, VersionIndexPath.NODE_PATH.getPath(), versionDumpJson.getNodePath() );
 
             endBuilder( builder );

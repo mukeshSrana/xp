@@ -1,11 +1,11 @@
 package com.enonic.xp.index;
 
-import java.nio.file.Path;
+import com.enonic.xp.vfs.VirtualFile;
 
 public class LoadDataParams
 {
 
-    private final Path dumpRoot;
+    private final VirtualFile dumpRoot;
 
     private final int batchSize;
 
@@ -20,7 +20,7 @@ public class LoadDataParams
         return new Builder();
     }
 
-    public Path getDumpRoot()
+    public VirtualFile getDumpRoot()
     {
         return dumpRoot;
     }
@@ -32,7 +32,7 @@ public class LoadDataParams
 
     public static final class Builder
     {
-        private Path dumpRoot;
+        private VirtualFile dumpRoot;
 
         private int batchSize;
 
@@ -40,7 +40,7 @@ public class LoadDataParams
         {
         }
 
-        public Builder dumpRoot( Path dumpRoot )
+        public Builder dumpRoot( final VirtualFile dumpRoot )
         {
             this.dumpRoot = dumpRoot;
             return this;
