@@ -90,6 +90,10 @@ public class SystemExportServiceImplTest
 
         verifyDumpFile( numberOfNodes, IndexType.BRANCH, "after", CTX_DEFAULT.getRepositoryId() );
         verifyDumpFile( numberOfNodes, IndexType.VERSION, "after", CTX_DEFAULT.getRepositoryId() );
+
+        getNodeById( NodeId.from( "node0" ) );
+        getNodeById( NodeId.from( "node1" ) );
+
     }
 
 

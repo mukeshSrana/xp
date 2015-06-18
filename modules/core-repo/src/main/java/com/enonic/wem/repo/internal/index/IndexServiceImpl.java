@@ -7,14 +7,6 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import com.enonic.xp.branch.Branch;
-import com.enonic.xp.index.IndexService;
-import com.enonic.xp.index.IndexType;
-import com.enonic.xp.index.PurgeIndexParams;
-import com.enonic.xp.index.ReindexParams;
-import com.enonic.xp.index.ReindexResult;
-import com.enonic.xp.node.Node;
-import com.enonic.xp.repository.RepositoryId;
 import com.enonic.wem.repo.internal.branch.BranchContext;
 import com.enonic.wem.repo.internal.branch.BranchService;
 import com.enonic.wem.repo.internal.elasticsearch.branch.NodeBranchQuery;
@@ -25,6 +17,14 @@ import com.enonic.wem.repo.internal.index.query.QueryService;
 import com.enonic.wem.repo.internal.repository.IndexNameResolver;
 import com.enonic.wem.repo.internal.repository.RepositoryIndexMappingProvider;
 import com.enonic.wem.repo.internal.repository.RepositorySearchIndexSettingsProvider;
+import com.enonic.xp.branch.Branch;
+import com.enonic.xp.index.IndexService;
+import com.enonic.xp.index.IndexType;
+import com.enonic.xp.index.PurgeIndexParams;
+import com.enonic.xp.index.ReindexParams;
+import com.enonic.xp.index.ReindexResult;
+import com.enonic.xp.node.Node;
+import com.enonic.xp.repository.RepositoryId;
 
 @Component
 public class IndexServiceImpl
@@ -62,7 +62,15 @@ public class IndexServiceImpl
 
             for ( final NodeBranchQueryResultEntry result : results )
             {
-                final Node node = this.nodeDao.getByVersionId( result.getNodeVersionId() );
+                final Node node;
+                try
+                {
+                    node = this.nodeDao.getByVersionId( result.getNodeVersionId() );
+                }
+                catch ( Exception e )
+                {
+                    throw new IndexException( "Could not index node with version-id: " + result.getNodeId(), e );
+                }
 
                 this.indexServiceInternal.store( node, result.getNodeVersionId(), IndexContext.create().
                     repositoryId( params.getRepositoryId() ).

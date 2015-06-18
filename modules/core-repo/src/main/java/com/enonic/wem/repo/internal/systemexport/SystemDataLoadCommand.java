@@ -10,7 +10,7 @@ import com.google.common.base.Preconditions;
 import com.enonic.wem.repo.internal.elasticsearch.ElasticsearchDao;
 import com.enonic.wem.repo.internal.repository.IndexNameResolver;
 import com.enonic.wem.repo.internal.repository.RepositoryInitializer;
-import com.enonic.xp.branch.Branch;
+import com.enonic.xp.content.ContentConstants;
 import com.enonic.xp.index.IndexService;
 import com.enonic.xp.index.IndexType;
 import com.enonic.xp.index.ReindexParams;
@@ -48,33 +48,30 @@ public class SystemDataLoadCommand
     {
         Preconditions.checkArgument( dumpPath.exists(), "Cannot find dump-root at path " + dumpPath.getPath() );
 
-        dumpPath.getChildren().forEach( this::handleRepo );
+        dumpPath.getChildren().forEach( this::handleRepository );
     }
 
-    private void handleRepo( final VirtualFile repoFolder )
+    private void handleRepository( final VirtualFile repoFolder )
     {
         final String repoName = repoFolder.getName();
 
-        LOG.info( "Load system data: Initializing repo '" + repoName + "'" );
+        initializeRepository( repoName );
 
-        repositoryInitializer.initializeRepository( RepositoryId.from( repoName ), true );
+        loadDataIntoRepository( repoFolder );
 
-        readRepoFolder( repoFolder );
-
-        internalIndexService.refresh( IndexNameResolver.resolveStorageIndexName( RepositoryId.from( repoName ) ) );
-
-        // TODO: Reindex all branches, not hardcoded
-        indexService.reindex( ReindexParams.create().
-            addBranch( Branch.from( "draft" ) ).
-            addBranch( Branch.from( "master" ) ).
-            initialize( false ).
-            repositoryId( RepositoryId.from( repoName ) ).
-            build() );
+        reindexRepository( repoName );
 
         internalIndexService.refresh( IndexNameResolver.resolveSearchIndexName( RepositoryId.from( repoName ) ) );
     }
 
-    private void readRepoFolder( final VirtualFile repoFolder )
+    private void initializeRepository( final String repoName )
+    {
+        LOG.info( "Load system data: Initializing repo '" + repoName + "'" );
+
+        repositoryInitializer.initializeRepository( RepositoryId.from( repoName ), true );
+    }
+
+    private void loadDataIntoRepository( final VirtualFile repoFolder )
     {
         final List<VirtualFile> indexFolders = repoFolder.getChildren();
 
@@ -86,8 +83,6 @@ public class SystemDataLoadCommand
 
     private void handleType( final VirtualFile typeFolder, final String repoName )
     {
-        // Initialize reader with type-folder and repo
-
         final IndexType indexType = IndexType.fromString( typeFolder.getName() );
 
         LOG.info( "Load system data: Loading data for type '" + typeFolder.getName() + "'" );
@@ -107,6 +102,25 @@ public class SystemDataLoadCommand
             build().
             load();
     }
+
+    private void reindexRepository( final String repoName )
+    {
+        internalIndexService.refresh( IndexNameResolver.resolveStorageIndexName( RepositoryId.from( repoName ) ) );
+
+        LOG.info( "Reindexing search index " );
+
+        // TODO: This should be fetched from repo-manager when that is finished
+        final ReindexParams.Builder builder = ReindexParams.create().
+            initialize( false ).
+            addBranch( ContentConstants.BRANCH_DRAFT ).
+            addBranch( ContentConstants.BRANCH_MASTER ).
+            repositoryId( RepositoryId.from( repoName ) );
+
+        final ReindexParams build = builder.build();
+
+        indexService.reindex( build );
+    }
+
 
     private DumpSerializer getSerializer( final IndexType indexType )
     {
