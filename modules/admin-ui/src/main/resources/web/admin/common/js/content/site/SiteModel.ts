@@ -4,7 +4,7 @@ module api.content.site {
 
     export class SiteModel {
 
-        public static PROPERTY_NAME_SITE_CONFIGS = "moduleConfigs";
+        public static PROPERTY_NAME_SITE_CONFIGS = "siteConfigs";
 
         private site: api.content.site.Site;
 
@@ -22,8 +22,8 @@ module api.content.site {
 
             this.site.getContentData().onPropertyAdded((event: api.data.PropertyAddedEvent) => {
                 var property: api.data.Property = event.getProperty();
-                // TODO:? property.getPath().startsWith(PropertyPath.fromString(".moduleConfig")) &&  property.getName( )=="config")
-                if (property.getPath().toString().indexOf(".moduleConfig") == 0 && property.getName() == "config") {
+                // TODO:? property.getPath().startsWith(PropertyPath.fromString(".siteConfig")) &&  property.getName( )=="config")
+                if (property.getPath().toString().indexOf(".siteConfig") == 0 && property.getName() == "config") {
                     var siteConfig: SiteConfig = api.content.site.SiteConfig.create().fromData(property.getParent()).build();
                     if (!this.siteConfigs) {
                         this.siteConfigs = [];
@@ -35,7 +35,7 @@ module api.content.site {
 
             this.site.getContentData().onPropertyRemoved((event: api.data.PropertyRemovedEvent) => {
                 var property: api.data.Property = event.getProperty();
-                if (property.getName() == "moduleConfig") {
+                if (property.getName() == "siteConfig") {
                     var moduleKey = ModuleKey.fromString(property.getPropertySet().getString("moduleKey"));
                     this.siteConfigs = this.siteConfigs.filter((siteConfig: SiteConfig) =>
                             !siteConfig.getModuleKey().equals(moduleKey)
@@ -43,7 +43,6 @@ module api.content.site {
                     this.notifyModuleRemoved(moduleKey);
                 }
             });
-
 
 
         }
@@ -66,9 +65,9 @@ module api.content.site {
 
         unPropertyChanged(listener: (event: api.PropertyChangedEvent)=>void) {
             this.propertyChangedListeners =
-            this.propertyChangedListeners.filter((curr: (event: api.PropertyChangedEvent)=>void) => {
-                return listener != curr;
-            });
+                this.propertyChangedListeners.filter((curr: (event: api.PropertyChangedEvent)=>void) => {
+                    return listener != curr;
+                });
         }
 
         private notifyPropertyChanged(property: string, oldValue: any, newValue: any, source: any) {

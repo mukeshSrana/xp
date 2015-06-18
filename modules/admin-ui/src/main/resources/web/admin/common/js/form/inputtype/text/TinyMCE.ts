@@ -11,15 +11,25 @@ module api.form.inputtype.text {
     import Element = api.dom.Element;
     import OptionSelectedEvent = api.ui.selector.OptionSelectedEvent;
     import LinkModalDialog = api.form.inputtype.text.tiny.LinkModalDialog;
+    import ImageModalDialog = api.form.inputtype.text.tiny.ImageModalDialog;
 
     export class TinyMCE extends support.BaseInputTypeNotManagingAdd<any,string> {
 
         private editors: TinyEditorOccurenceInfo[];
+        private contentId: api.content.ContentId;
 
-        constructor(config: api.form.inputtype.InputTypeViewContext<any>) {
+        static imagePrefix = "image://";
+        static maxImageWidth = 640;
+
+        private previousScrollPos: number = 0;//fix for XP-736
+        private isScrollProhibited: boolean = false;
+
+        constructor(config: api.content.form.inputtype.ContentInputTypeViewContext<any>) {
             super(config);
+
             this.addClass("tinymce-editor");
             this.editors = [];
+            this.contentId = config.contentId;
         }
 
         getValueType(): ValueType {
@@ -54,6 +64,8 @@ module api.form.inputtype.text {
         }
 
         private initEditor(id: string, property: Property, textAreaWrapper: Element): void {
+            this.previousScrollPos = wemjq(this.getHTMLElement()).closest(".form-panel").scrollTop(); //XP-736
+
             var focusedEditorCls = "tinymce-editor-focused";
             var baseUrl = CONFIG.assetsUri;
 
@@ -65,14 +77,15 @@ module api.form.inputtype.text {
                 theme_url: 'modern',
 
                 toolbar: [
-                    "styleselect | cut copy pastetext | bullist numlist outdent indent | charmap link unlink | table | code"
+                    "styleselect | cut copy pastetext | bullist numlist outdent indent | charmap image link unlink | table | code"
                 ],
                 menubar: false,
                 statusbar: false,
                 paste_as_text: true,
                 plugins: ['autoresize', 'table', 'paste', 'charmap', 'code'],
                 external_plugins: {
-                    "link": baseUrl + "/common/js/form/inputtype/text/plugins/link.js"
+                    "link": baseUrl + "/common/js/form/inputtype/text/plugins/link.js",
+                    "image": baseUrl + "/common/js/form/inputtype/text/plugins/image.js"
                 },
                 autoresize_min_height: 100,
                 autoresize_bottom_margin: 0,
@@ -80,9 +93,9 @@ module api.form.inputtype.text {
 
                 setup: (editor) => {
                     editor.addCommand("openLinkDialog", this.openLinkDialog, this);
+                    editor.addCommand("openImageDialog", this.openImageDialog, this);
                     editor.on('change', (e) => {
-                        var value = this.newValue(this.getEditor(id).getContent());
-                        property.setValue(value);
+                        this.setPropertyValue(id, property);
                     });
                     editor.on('focus', (e) => {
                         this.resetInputHeight();
@@ -95,8 +108,8 @@ module api.form.inputtype.text {
                     editor.on('keydown', (e) => {
                         if ((e.metaKey || e.ctrlKey) && e.keyCode === 83) {
                             e.preventDefault();
-                            var value = this.newValue(this.getEditor(id).getContent());
-                            property.setValue(value); // ensure that entered value is stored
+
+                            this.setPropertyValue(id, property);
 
                             wemjq(this.getEl().getHTMLElement()).simulate(e.type, { // as editor resides in a frame - propagate event via wrapping element
                                 bubbles: e.bubbles,
@@ -114,8 +127,11 @@ module api.form.inputtype.text {
                 },
                 init_instance_callback: (editor) => {
                     this.setEditorContent(id, property);
-                    this.setupStickyEditorToolbarForInputOccurence(textAreaWrapper);
+                    if (this.notInLiveEdit()) {
+                        this.setupStickyEditorToolbarForInputOccurence(textAreaWrapper);
+                    }
                     this.removeTooltipFromEditorArea(textAreaWrapper);
+                    this.temporarilyDisableScrolling(); //XP-736
                 }
             });
         }
@@ -134,7 +150,13 @@ module api.form.inputtype.text {
         }
 
         private setupStickyEditorToolbarForInputOccurence(inputOccurence: Element) {
-            wemjq(this.getHTMLElement()).closest(".form-panel").on("scroll", () => this.updateStickyEditorToolbar(inputOccurence));
+            wemjq(this.getHTMLElement()).closest(".form-panel").on("scroll", (event) => {
+                this.updateStickyEditorToolbar(inputOccurence);
+
+                if (this.isScrollProhibited) {
+                    wemjq(this.getHTMLElement()).closest(".form-panel").scrollTop(this.previousScrollPos);
+                }
+            });
 
             api.ui.responsive.ResponsiveManager.onAvailableSizeChanged(this, () => {
                 this.updateEditorToolbarWidth();
@@ -150,6 +172,13 @@ module api.form.inputtype.text {
                 this.resetInputHeight();
                 this.updateEditorToolbarWidth();
             });
+        }
+
+        private temporarilyDisableScrolling() {
+            this.isScrollProhibited = true;
+            setTimeout(() => {
+                this.isScrollProhibited = false;
+            }, 300);
         }
 
         private updateStickyEditorToolbar(inputOccurence: Element) {
@@ -207,8 +236,16 @@ module api.form.inputtype.text {
 
         private setEditorContent(editorId: string, property: Property): void {
             if (property.hasNonNullValue()) {
-                this.getEditor(editorId).setContent(property.getString());
+                this.getEditor(editorId).setContent(this.propertyValue2Content(property.getString()));
             }
+        }
+
+        private notInLiveEdit(): boolean {
+            return !(wemjq(this.getHTMLElement()).parents(".inspection-panel").length > 0);
+        }
+
+        private setPropertyValue(id: string, property: Property) {
+            property.setValue(this.editorContent2PropertyValue(id));
         }
 
         private newValue(s: string): Value {
@@ -225,9 +262,14 @@ module api.form.inputtype.text {
             return true;
         }
 
-        private openLinkDialog(linkConfig: LinkConfig) {
-            var linkModalDialog = new LinkModalDialog(linkConfig.editor, linkConfig.link);
+        private openLinkDialog(config: TinyMCELink) {
+            var linkModalDialog = new LinkModalDialog(config);
             linkModalDialog.open();
+        }
+
+        private openImageDialog(config: TinyMCEImage) {
+            var imageModalDialog = new ImageModalDialog(config, this.contentId);
+            imageModalDialog.open();
         }
 
         private removeTooltipFromEditorArea(inputOccurence: Element) {
@@ -273,6 +315,54 @@ module api.form.inputtype.text {
 
             return result;
         }
+
+        private getConvertedImageSrc(imgSrc: string): string {
+            var contentId = imgSrc.replace(TinyMCE.imagePrefix, api.util.StringHelper.EMPTY_STRING),
+                imageUrl = new api.content.ContentImageUrlResolver().
+                    setContentId(new api.content.ContentId(contentId)).
+                    setScaleWidth(true).
+                    setSize(TinyMCE.maxImageWidth).
+                    resolve();
+
+            return "src=\"" + imageUrl + "\" data-src=\"" + imgSrc + "\"";
+        }
+
+        private propertyValue2Content(propertyValue: string) {
+            var content = propertyValue,
+                processedContent = propertyValue,
+                regex = /<img.*?src="(.*?)"/g,
+                imgSrcs, imgSrc;
+
+            while ((imgSrcs = regex.exec(content)) != null) {
+                imgSrc = imgSrcs[1];
+                if (imgSrc.indexOf(TinyMCE.imagePrefix) === 0) {
+                    processedContent = processedContent.replace("src=\"" + imgSrc + "\"", this.getConvertedImageSrc(imgSrc));
+                }
+            }
+
+            return processedContent;
+        }
+
+        private editorContent2PropertyValue(editorId: string): Value {
+            var content = this.getEditor(editorId).getContent(),
+                processedContent = this.getEditor(editorId).getContent(),
+                regex = /<img.*?data-src="(.*?)".*?>/g,
+                imgTags, imgTag;
+
+            while ((imgTags = regex.exec(content)) != null) {
+                imgTag = imgTags[0];
+                if (imgTag.indexOf("<img ") === 0 && imgTag.indexOf(TinyMCE.imagePrefix) > 0) {
+                    var dataSrc = /<img.*?data-src="(.*?)".*?>/.exec(imgTag)[1],
+                        src = /<img.*?src="(.*?)".*?>/.exec(imgTags[0])[1];
+
+                    var convertedImg = imgTag.replace(src, dataSrc).replace(" data-src=\"" + dataSrc + "\"",
+                        api.util.StringHelper.EMPTY_STRING);
+                    processedContent = processedContent.replace(imgTag, convertedImg);
+                }
+            }
+
+            return this.newValue(processedContent);
+        }
     }
 
     export interface TinyEditorOccurenceInfo {
@@ -280,10 +370,18 @@ module api.form.inputtype.text {
         textAreaWrapper: Element;
         property: Property;
     }
-    
-    interface LinkConfig {
+
+    export interface TinyMCELink {
         editor: TinyMceEditor
-        link: HTMLElement
+        element: HTMLElement
+        text: string
+    }
+
+    export interface TinyMCEImage {
+        editor: TinyMceEditor
+        element: HTMLElement
+        container: HTMLElement
+        callback: Function
     }
 
     api.form.inputtype.InputTypeManager.register(new api.Class("TinyMCE", TinyMCE));

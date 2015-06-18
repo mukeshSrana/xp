@@ -3,6 +3,10 @@ module api.content {
     import Button = api.ui.button.Button;
     import CloseButton = api.ui.button.CloseButton;
 
+    import Point = api.ui.image.Point;
+    import Rect = api.ui.image.Rect;
+    import ImageEditor = api.ui.image.ImageEditor;
+
     export interface ImageUploaderConfig extends MediaUploaderConfig {
         scaleWidth: boolean;
     }
@@ -10,8 +14,9 @@ module api.content {
     export class ImageUploader extends MediaUploader {
 
         private images: api.dom.ImgEl[];
-        private imageEditors: api.ui.image.ImageEditor[];
-        private focalEditModeListeners: {(edit: boolean, position: {x: number; y: number}): void}[];
+        private imageEditors: ImageEditor[];
+        private focalEditModeListeners: {(edit: boolean, position: Point): void}[];
+        private cropEditModeListeners: {(edit: boolean, crop: Rect): void}[];
 
         private initialWidth: number;
 
@@ -23,6 +28,7 @@ module api.content {
             this.images = [];
             this.imageEditors = [];
             this.focalEditModeListeners = [];
+            this.cropEditModeListeners = [];
 
             if (config.scaleWidth != undefined) {
                 this.scaleWidth = config.scaleWidth;
@@ -55,14 +61,19 @@ module api.content {
                 setScaleWidth(this.scaleWidth).
                 resolve();
 
-            var imageEditor = new api.ui.image.ImageEditor(imgUrl);
-            imageEditor.onFocusEditModeChanged((edit, position) => {
+            var imageEditor = new ImageEditor(imgUrl);
+            imageEditor.onFocusModeChanged((edit: boolean, position: Point) => {
                 this.setResetVisible(!edit);
                 this.notifyFocalPointEditModeChanged(edit, position);
             });
+            imageEditor.onCropModeChanged((edit, crop) => {
+                this.setResetVisible(!edit);
+                this.notifyCropEditModeChanged(edit, crop);
+            });
             var image = imageEditor.getImage();
 
-            this.getEl().setMaxWidthPx(image.getEl().getNaturalWidth());
+            image.getEl().setWidthPx(this.initialWidth);
+            this.getEl().setMaxWidthPx(this.initialWidth);
 
             image.onLoaded(() => {
                 this.getEl().setMaxWidthPx(image.getEl().getNaturalWidth());
@@ -71,8 +82,23 @@ module api.content {
                 this.getEl().setMaxWidthPx(this.initialWidth);
             });
 
-            imageEditor.onClicked((event: MouseEvent) => {
-                imageEditor.toggleClass('selected');
+            this.onFocus(() => {
+                setTimeout(() => {
+                    if (!imageEditor.hasClass('selected')) {
+                        this.toggleSelected(imageEditor);
+                    }
+                }, 150);
+            });
+
+            this.onBlur(() => {
+                if (imageEditor.hasClass('selected')) {
+                    this.toggleSelected(imageEditor);
+                }
+            });
+
+            image.onClicked((event: MouseEvent) => {
+
+                this.toggleSelected(imageEditor);
 
                 event.stopPropagation();
                 event.preventDefault();
@@ -82,36 +108,74 @@ module api.content {
 
             api.dom.Body.get().onClicked((event: MouseEvent) => {
                 this.imageEditors.forEach((editor) => {
-                    editor.removeClass('selected');
+                    if (editor.hasClass('selected')) {
+                        editor.removeClass('selected');
+                        if (wemjq(this.getHTMLElement()).has(editor.getHTMLElement()).length) {
+                            this.setResetVisible(false);
+                        }
+                    }
                 });
             });
 
             return imageEditor;
         }
 
+        private toggleSelected(imageEditor: ImageEditor) {
+            imageEditor.toggleClass('selected');
+            this.setResetVisible(imageEditor.hasClass('selected'));
+        }
+
         setFocalPoint(x: number, y: number) {
-            this.imageEditors.forEach((editor: api.ui.image.ImageEditor) => {
+            this.imageEditors.forEach((editor: ImageEditor) => {
                 editor.setFocusPosition(x, y);
             })
         }
 
+        setCrop(x: number, y: number, w: number, h: number) {
+            this.imageEditors.forEach((editor: ImageEditor) => {
+                editor.setCropPosition(x, y, w, h);
+            })
+        }
+
         isFocalPointEditMode(): boolean {
-            return this.imageEditors.some((editor: api.ui.image.ImageEditor) => {
+            return this.imageEditors.some((editor: ImageEditor) => {
                 return editor.isFocusEditMode();
             });
         }
 
-        onFocalPointEditModeChanged(listener: (edit: boolean, position: {x: number; y: number}) => void) {
+        isCropEditMode(): boolean {
+            return this.imageEditors.some((editor: ImageEditor) => {
+                return editor.isCropEditMode();
+            })
+        }
+
+        onCropEditModeChanged(listener: (edit: boolean, crop: Rect) => void) {
+            this.cropEditModeListeners.push(listener);
+        }
+
+        unCropEditModeChanged(listener: (edit: boolean, crop: Rect) => void) {
+            this.cropEditModeListeners = this.cropEditModeListeners.filter((curr) => {
+                return curr !== listener;
+            });
+        }
+
+        private notifyCropEditModeChanged(edit: boolean, crop: Rect) {
+            this.cropEditModeListeners.forEach((listener) => {
+                listener(edit, crop);
+            })
+        }
+
+        onFocalPointEditModeChanged(listener: (edit: boolean, position: Point) => void) {
             this.focalEditModeListeners.push(listener);
         }
 
-        unFocalPointEditModeChanged(listener: (edit: boolean, position: {x: number; y: number}) => void) {
+        unFocalPointEditModeChanged(listener: (edit: boolean, position: Point) => void) {
             this.focalEditModeListeners = this.focalEditModeListeners.filter((curr) => {
                 return curr !== listener;
             });
         }
 
-        private notifyFocalPointEditModeChanged(edit: boolean, position: {x: number; y: number}) {
+        private notifyFocalPointEditModeChanged(edit: boolean, position: Point) {
             this.focalEditModeListeners.forEach((listener) => {
                 listener(edit, position);
             })

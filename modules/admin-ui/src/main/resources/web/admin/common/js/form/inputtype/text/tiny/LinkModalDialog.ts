@@ -1,6 +1,5 @@
 module api.form.inputtype.text.tiny {
 
-    import FormView = api.form.FormView;
     import Form = api.ui.form.Form;
     import FormItem = api.ui.form.FormItem;
     import Panel = api.ui.panel.Panel;
@@ -8,12 +7,9 @@ module api.form.inputtype.text.tiny {
     import Validators = api.ui.form.Validators;
 
     export class LinkModalDialog extends ModalDialog {
-
-        private linkTextFormItem: FormItem;
-        private mainForm: Form;
         private dockedPanel: DockedPanel;
-        private editor: TinyMceEditor;
         private link: HTMLElement;
+        private linkText: string;
 
         private static tabNames: any = {
             content: "Content",
@@ -27,15 +23,15 @@ module api.form.inputtype.text.tiny {
         private static emailPrefix = "mailto:";
         private static subjectPrefix = "?subject=";
 
-        constructor(editor: TinyMceEditor, link: HTMLElement) {
-            this.editor = editor;
-            this.link = link;
+        constructor(config: api.form.inputtype.text.TinyMCELink) {
+            this.link = config.element;
+            this.linkText = config.text;
 
-            super(new api.ui.dialog.ModalDialogHeader("Insert link"));
+            super(config.editor, new api.ui.dialog.ModalDialogHeader("Insert Link"));
         }
 
         private getLinkText(): string {
-            return this.link ? this.link["text"] : api.util.StringHelper.EMPTY_STRING;
+            return this.link ? this.link["text"] : this.linkText;
         }
 
         private getToolTip(): string {
@@ -92,14 +88,9 @@ module api.form.inputtype.text.tiny {
             return decodeURI(emailArr[1].replace(LinkModalDialog.subjectPrefix, api.util.StringHelper.EMPTY_STRING));
         }
 
-        layout() {
-            this.appendChildToContentPanel(this.mainForm = this.createMainForm());
+        protected layout() {
+            super.layout();
             this.appendChildToContentPanel(this.dockedPanel = this.createDockedPanel());
-        }
-
-        show() {
-            super.show();
-            this.linkTextFormItem.getInput().giveFocus();
         }
 
         private createContentPanel(): Panel {
@@ -155,26 +146,24 @@ module api.form.inputtype.text.tiny {
             return this.createFormItem(id, "Open new window", null, null, checkbox);
         }
 
-        private createMainForm(): Form {
-            return this.createForm([
-                this.linkTextFormItem = this.createFormItem("linkText", "Text", Validators.required, this.getLinkText()),
+        protected getMainFormItems(): FormItem [] {
+            var linkTextFormItem = this.createFormItem("linkText", "Text", Validators.required, this.getLinkText());
+            this.setFirstFocusField(linkTextFormItem.getInput());
+
+            return [
+                linkTextFormItem,
                 this.createFormItem("toolTip", "Tooltip", null, this.getToolTip())
-            ]);
+            ];
         }
 
         private createDockedPanel(): DockedPanel {
             var dockedPanel = new DockedPanel();
-            dockedPanel.addItem(LinkModalDialog.tabNames.content, this.createContentPanel());
-            dockedPanel.addItem(LinkModalDialog.tabNames.url, this.createUrlPanel(), this.isUrl());
-            dockedPanel.addItem(LinkModalDialog.tabNames.download, this.createDownloadPanel(), this.isDownloadLink());
-            dockedPanel.addItem(LinkModalDialog.tabNames.email, this.createEmailPanel(), this.isEmail());
+            dockedPanel.addItem(LinkModalDialog.tabNames.content, true, this.createContentPanel());
+            dockedPanel.addItem(LinkModalDialog.tabNames.url, true, this.createUrlPanel(), this.isUrl());
+            dockedPanel.addItem(LinkModalDialog.tabNames.download, true, this.createDownloadPanel(), this.isDownloadLink());
+            dockedPanel.addItem(LinkModalDialog.tabNames.email, true, this.createEmailPanel(), this.isEmail());
 
             return dockedPanel;
-        }
-
-        close() {
-            super.close();
-            this.editor.focus();
         }
 
         protected initializeActions() {
@@ -218,11 +207,9 @@ module api.form.inputtype.text.tiny {
             return form.validate(true).isValid();
         }
 
-        private validate(): boolean {
-            var mainFormValid = this.mainForm.validate(true).isValid();
+        protected validate(): boolean {
+            var mainFormValid = super.validate();
             var dockPanelValid = this.validateDockPanel();
-
-            this.setValidated();
 
             return mainFormValid && dockPanelValid;
         }
@@ -317,7 +304,7 @@ module api.form.inputtype.text.tiny {
                 this.updateLink(linkEl);
             }
             else {
-                this.editor.insertContent(linkEl.toString());
+                this.getEditor().insertContent(linkEl.toString());
             }
         }
 

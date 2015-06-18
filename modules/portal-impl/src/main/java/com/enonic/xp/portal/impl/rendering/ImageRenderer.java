@@ -6,7 +6,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 import com.enonic.xp.content.ContentId;
-import com.enonic.xp.content.page.region.ImageComponent;
 import com.enonic.xp.portal.PortalRequest;
 import com.enonic.xp.portal.PortalResponse;
 import com.enonic.xp.portal.RenderMode;
@@ -14,6 +13,7 @@ import com.enonic.xp.portal.impl.controller.PortalResponseSerializer;
 import com.enonic.xp.portal.rendering.Renderer;
 import com.enonic.xp.portal.url.ImageUrlParams;
 import com.enonic.xp.portal.url.PortalUrlService;
+import com.enonic.xp.region.ImageComponent;
 
 @Component(immediate = true, service = Renderer.class)
 public final class ImageRenderer
@@ -41,7 +41,8 @@ public final class ImageRenderer
         if ( component.getImage() != null )
         {
             final String imageUrl = buildUrl( portalRequest, component.getImage() );
-            html.append( "<figure " + RenderingConstants.PORTAL_COMPONENT_ATTRIBUTE + "=\"" + type + "\">" );
+            html.append( "<figure " ).append( RenderingConstants.PORTAL_COMPONENT_ATTRIBUTE ).append( "=\"" ).append( type ).append(
+                "\">" );
             html.append( "<img style=\"width: 100%\" src=\"" ).append( imageUrl ).append( "\"/>" );
             if ( component.hasCaption() )
             {
@@ -63,7 +64,7 @@ public final class ImageRenderer
     {
         final ImageUrlParams params = new ImageUrlParams().portalRequest( portalRequest );
         params.id( id.toString() );
-        params.scale( "width(500)" );
+        params.filter( "scalewidth(768)" );
         return this.urlService.imageUrl( params );
     }
 

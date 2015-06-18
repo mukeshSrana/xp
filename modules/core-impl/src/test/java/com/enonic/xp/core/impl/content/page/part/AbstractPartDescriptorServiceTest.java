@@ -2,9 +2,9 @@ package com.enonic.xp.core.impl.content.page.part;
 
 import org.junit.Before;
 
-import com.enonic.xp.content.page.DescriptorKey;
 import com.enonic.xp.core.impl.content.page.AbstractDescriptorServiceTest;
 import com.enonic.xp.core.impl.content.page.region.PartDescriptorServiceImpl;
+import com.enonic.xp.page.DescriptorKey;
 import com.enonic.xp.resource.ResourceKey;
 
 public abstract class AbstractPartDescriptorServiceTest
@@ -22,7 +22,7 @@ public abstract class AbstractPartDescriptorServiceTest
     @Override
     protected final ResourceKey toResourceKey( final DescriptorKey key )
     {
-        return ResourceKey.from( key.getModuleKey(), "parts/" + key.getName() + "/part.xml" );
+        return ResourceKey.from( key.getModuleKey(), "app/parts/" + key.getName() + "/" + key.getName() + ".xml" );
     }
 
     @Override

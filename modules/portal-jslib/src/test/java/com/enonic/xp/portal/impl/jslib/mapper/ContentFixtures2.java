@@ -9,32 +9,32 @@ import com.enonic.xp.content.ContentId;
 import com.enonic.xp.content.ContentPath;
 import com.enonic.xp.content.Contents;
 import com.enonic.xp.content.ExtraData;
-import com.enonic.xp.content.page.DescriptorKey;
-import com.enonic.xp.content.page.Page;
-import com.enonic.xp.content.page.PageDescriptor;
-import com.enonic.xp.content.page.PageRegions;
-import com.enonic.xp.content.page.region.Component;
-import com.enonic.xp.content.page.region.LayoutComponent;
-import com.enonic.xp.content.page.region.LayoutRegions;
-import com.enonic.xp.content.page.region.PartComponent;
-import com.enonic.xp.content.page.region.Region;
-import com.enonic.xp.content.site.Site;
-import com.enonic.xp.content.site.SiteConfig;
-import com.enonic.xp.content.site.SiteConfigs;
 import com.enonic.xp.data.PropertySet;
 import com.enonic.xp.data.PropertyTree;
 import com.enonic.xp.form.Form;
 import com.enonic.xp.form.Input;
 import com.enonic.xp.form.inputtype.InputTypes;
 import com.enonic.xp.module.ModuleKey;
+import com.enonic.xp.page.DescriptorKey;
+import com.enonic.xp.page.Page;
+import com.enonic.xp.page.PageDescriptor;
+import com.enonic.xp.page.PageRegions;
+import com.enonic.xp.region.Component;
+import com.enonic.xp.region.LayoutComponent;
+import com.enonic.xp.region.LayoutRegions;
+import com.enonic.xp.region.PartComponent;
+import com.enonic.xp.region.Region;
 import com.enonic.xp.schema.mixin.MixinName;
 import com.enonic.xp.security.PrincipalKey;
+import com.enonic.xp.site.Site;
+import com.enonic.xp.site.SiteConfig;
+import com.enonic.xp.site.SiteConfigs;
 import com.enonic.xp.util.BinaryReference;
 import com.enonic.xp.util.GeoPoint;
 import com.enonic.xp.util.Link;
 
-import static com.enonic.xp.content.page.region.RegionDescriptor.newRegionDescriptor;
-import static com.enonic.xp.content.page.region.RegionDescriptors.newRegionDescriptors;
+import static com.enonic.xp.region.RegionDescriptor.newRegionDescriptor;
+import static com.enonic.xp.region.RegionDescriptors.newRegionDescriptors;
 
 public final class ContentFixtures2
 {
@@ -118,7 +118,6 @@ public final class ContentFixtures2
         tree.addInstant( "instant", Instant.MAX );
         tree.addLocalDate( "localDate", LocalDate.of( 2014, 1, 31 ) );
         tree.addLocalDateTime( "localDateTime", LocalDateTime.of( 2014, 1, 31, 10, 30, 5 ) );
-
 
         final PropertySet set1 = tree.addSet( "c" );
         set1.setBoolean( "d", true );

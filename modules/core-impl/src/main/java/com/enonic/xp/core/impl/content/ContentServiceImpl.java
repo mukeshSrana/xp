@@ -53,15 +53,12 @@ import com.enonic.xp.content.ReorderChildParams;
 import com.enonic.xp.content.SetContentChildOrderParams;
 import com.enonic.xp.content.UpdateContentParams;
 import com.enonic.xp.content.UpdateMediaParams;
-import com.enonic.xp.content.site.SiteConfigsDataSerializer;
-import com.enonic.xp.content.site.Site;
 import com.enonic.xp.context.Context;
 import com.enonic.xp.context.ContextAccessor;
 import com.enonic.xp.context.ContextBuilder;
 import com.enonic.xp.data.PropertyTree;
 import com.enonic.xp.event.EventPublisher;
 import com.enonic.xp.media.MediaInfoService;
-import com.enonic.xp.module.ModuleService;
 import com.enonic.xp.node.MoveNodeException;
 import com.enonic.xp.node.Node;
 import com.enonic.xp.node.NodeAlreadyExistAtPathException;
@@ -82,6 +79,10 @@ import com.enonic.xp.schema.mixin.MixinService;
 import com.enonic.xp.security.RoleKeys;
 import com.enonic.xp.security.acl.AccessControlList;
 import com.enonic.xp.security.auth.AuthenticationInfo;
+import com.enonic.xp.site.CreateSiteParams;
+import com.enonic.xp.site.Site;
+import com.enonic.xp.site.SiteConfigsDataSerializer;
+import com.enonic.xp.site.SiteService;
 import com.enonic.xp.util.BinaryReference;
 
 import static com.enonic.xp.core.impl.content.ContentNodeHelper.translateNodePathToContentPath;
@@ -112,7 +113,7 @@ public class ContentServiceImpl
 
     private MixinService mixinService;
 
-    private ModuleService moduleService;
+    private SiteService siteService;
 
     public ContentServiceImpl()
     {
@@ -130,6 +131,48 @@ public class ContentServiceImpl
     }
 
     @Override
+    public Site create( final CreateSiteParams params )
+    {
+        final PropertyTree data = new PropertyTree();
+        data.setString( "description", params.getDescription() );
+
+        SITE_CONFIGS_DATA_SERIALIZER.toProperties( params.getSiteConfigs(), data.getRoot() );
+
+        final CreateContentParams createContentParams = CreateContentParams.create().
+            type( ContentTypeName.site() ).
+            parent( params.getParentContentPath() ).
+            name( params.getName() ).
+            displayName( params.getDisplayName() ).
+            contentData( data ).
+            requireValid( params.isRequireValid() ).
+            build();
+
+        final Site site = (Site) CreateContentCommand.create().
+            nodeService( this.nodeService ).
+            contentTypeService( this.contentTypeService ).
+            translator( this.contentNodeTranslator ).
+            eventPublisher( this.eventPublisher ).
+            siteService( this.siteService ).
+            mixinService( this.mixinService ).
+            params( createContentParams ).
+            build().
+            execute();
+
+        this.create( CreateContentParams.create().
+            owner( site.getOwner() ).
+            displayName( TEMPLATES_FOLDER_DISPLAY_NAME ).
+            name( TEMPLATES_FOLDER_NAME ).
+            inheritPermissions( true ).
+            parent( site.getPath() ).
+            type( ContentTypeName.templateFolder() ).
+            requireValid( true ).
+            contentData( new PropertyTree() ).
+            build() );
+
+        return site;
+    }
+
+    @Override
     public Content create( final CreateContentParams params )
     {
         final Content content = CreateContentCommand.create().
@@ -137,7 +180,7 @@ public class ContentServiceImpl
             contentTypeService( this.contentTypeService ).
             translator( this.contentNodeTranslator ).
             eventPublisher( this.eventPublisher ).
-            moduleService( this.moduleService ).
+            siteService( this.siteService ).
             mixinService( this.mixinService ).
             params( params ).
             build().
@@ -170,7 +213,7 @@ public class ContentServiceImpl
             translator( this.contentNodeTranslator ).
             eventPublisher( this.eventPublisher ).
             mediaInfoService( this.mediaInfoService ).
-            moduleService( this.moduleService ).
+            siteService( this.siteService ).
             mixinService( this.mixinService ).
             build().
             execute();
@@ -184,7 +227,7 @@ public class ContentServiceImpl
             contentTypeService( this.contentTypeService ).
             translator( this.contentNodeTranslator ).
             eventPublisher( this.eventPublisher ).
-            moduleService( this.moduleService ).
+            siteService( this.siteService ).
             mixinService( this.mixinService ).
             build().
             execute();
@@ -199,7 +242,7 @@ public class ContentServiceImpl
             translator( this.contentNodeTranslator ).
             eventPublisher( this.eventPublisher ).
             mediaInfoService( this.mediaInfoService ).
-            moduleService( this.moduleService ).
+            siteService( this.siteService ).
             mixinService( this.mixinService ).
             build().
             execute();
@@ -249,6 +292,16 @@ public class ContentServiceImpl
             contentTypeService( this.contentTypeService ).
             translator( this.contentNodeTranslator ).
             eventPublisher( this.eventPublisher ).
+            build().
+            execute();
+    }
+
+    @Override
+    public Site getNearestSite( final ContentId contentId )
+    {
+        return GetNearestSiteCommand.create().
+            contentService( this ).
+            contentId( contentId ).
             build().
             execute();
     }
@@ -659,8 +712,8 @@ public class ContentServiceImpl
     }
 
     @Reference
-    public void setModuleService( final ModuleService moduleService )
+    public void setSiteService( final SiteService siteService )
     {
-        this.moduleService = moduleService;
+        this.siteService = siteService;
     }
 }

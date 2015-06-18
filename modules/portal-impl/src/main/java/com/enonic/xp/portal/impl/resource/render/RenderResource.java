@@ -5,21 +5,21 @@ import com.enonic.xp.content.ContentId;
 import com.enonic.xp.content.ContentNotFoundException;
 import com.enonic.xp.content.ContentPath;
 import com.enonic.xp.content.ContentService;
-import com.enonic.xp.content.page.GetDefaultPageTemplateParams;
-import com.enonic.xp.content.page.Page;
-import com.enonic.xp.content.page.PageDescriptor;
-import com.enonic.xp.content.page.PageTemplate;
-import com.enonic.xp.content.site.Site;
+import com.enonic.xp.page.GetDefaultPageTemplateParams;
+import com.enonic.xp.page.Page;
+import com.enonic.xp.page.PageDescriptor;
+import com.enonic.xp.page.PageTemplate;
 import com.enonic.xp.portal.RenderMode;
 import com.enonic.xp.portal.impl.resource.base.BaseSubResource;
 import com.enonic.xp.schema.content.ContentTypeName;
+import com.enonic.xp.site.Site;
 
 public abstract class RenderResource
     extends BaseSubResource
 {
     protected final Site getSite( final Content content )
     {
-        final Site site = this.services.getSiteService().getNearestSite( content.getId() );
+        final Site site = this.services.getContentService().getNearestSite( content.getId() );
 
         if ( site == null )
         {

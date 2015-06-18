@@ -22,19 +22,18 @@ import com.enonic.xp.content.ContentId;
 import com.enonic.xp.content.ContentListMetaData;
 import com.enonic.xp.content.ContentNotFoundException;
 import com.enonic.xp.content.ContentService;
-import com.enonic.xp.content.page.GetDefaultPageTemplateParams;
-import com.enonic.xp.content.page.PageTemplate;
-import com.enonic.xp.content.page.PageTemplateKey;
-import com.enonic.xp.content.page.PageTemplateService;
-import com.enonic.xp.content.page.PageTemplateSpec;
-import com.enonic.xp.content.page.PageTemplates;
 import com.enonic.xp.form.InlineMixinsToFormItemsTransformer;
+import com.enonic.xp.page.GetDefaultPageTemplateParams;
+import com.enonic.xp.page.PageTemplate;
+import com.enonic.xp.page.PageTemplateKey;
+import com.enonic.xp.page.PageTemplateService;
+import com.enonic.xp.page.PageTemplateSpec;
+import com.enonic.xp.page.PageTemplates;
 import com.enonic.xp.schema.content.ContentTypeName;
 import com.enonic.xp.schema.content.ContentTypeService;
 import com.enonic.xp.schema.mixin.MixinService;
 import com.enonic.xp.security.RoleKeys;
 import com.enonic.xp.security.SecurityService;
-import com.enonic.xp.site.SiteService;
 
 @javax.ws.rs.Path(ResourceConstants.REST_ROOT + "content/page/template")
 @Produces(MediaType.APPLICATION_JSON)
@@ -46,8 +45,6 @@ public final class PageTemplateResource
     protected PageTemplateService pageTemplateService;
 
     private ContentService contentService;
-
-    private SiteService siteService;
 
     private ContentTypeService contentTypeService;
 
@@ -122,8 +119,8 @@ public final class PageTemplateResource
         final ContentId contentId = ContentId.from( contentIdAsString );
         try
         {
-            final Content content = contentService.getById( contentId );
-            final Content nearestSite = this.siteService.getNearestSite( contentId );
+            final Content content = this.contentService.getById( contentId );
+            final Content nearestSite = this.contentService.getNearestSite( contentId );
 
             if ( nearestSite != null )
             {
@@ -166,12 +163,6 @@ public final class PageTemplateResource
     public void setContentService( final ContentService contentService )
     {
         this.contentService = contentService;
-    }
-
-    @Reference
-    public void setSiteService( final SiteService siteService )
-    {
-        this.siteService = siteService;
     }
 
     @Reference

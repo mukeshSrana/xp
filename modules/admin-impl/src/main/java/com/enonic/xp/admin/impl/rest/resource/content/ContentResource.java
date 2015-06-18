@@ -65,6 +65,10 @@ import com.enonic.xp.admin.impl.rest.resource.content.json.ReorderChildJson;
 import com.enonic.xp.admin.impl.rest.resource.content.json.ReorderChildrenJson;
 import com.enonic.xp.admin.impl.rest.resource.content.json.SetChildOrderJson;
 import com.enonic.xp.admin.impl.rest.resource.content.json.UpdateContentJson;
+import com.enonic.xp.attachment.Attachment;
+import com.enonic.xp.attachment.AttachmentNames;
+import com.enonic.xp.attachment.CreateAttachment;
+import com.enonic.xp.attachment.CreateAttachments;
 import com.enonic.xp.branch.Branches;
 import com.enonic.xp.content.ApplyContentPermissionsParams;
 import com.enonic.xp.content.CompareContentResults;
@@ -78,6 +82,7 @@ import com.enonic.xp.content.ContentListMetaData;
 import com.enonic.xp.content.ContentNotFoundException;
 import com.enonic.xp.content.ContentPath;
 import com.enonic.xp.content.ContentPaths;
+import com.enonic.xp.content.ContentQuery;
 import com.enonic.xp.content.ContentService;
 import com.enonic.xp.content.ContentState;
 import com.enonic.xp.content.Contents;
@@ -104,11 +109,6 @@ import com.enonic.xp.content.SetContentChildOrderParams;
 import com.enonic.xp.content.UnableToDeleteContentException;
 import com.enonic.xp.content.UpdateContentParams;
 import com.enonic.xp.content.UpdateMediaParams;
-import com.enonic.xp.content.attachment.Attachment;
-import com.enonic.xp.content.attachment.AttachmentNames;
-import com.enonic.xp.content.attachment.CreateAttachment;
-import com.enonic.xp.content.attachment.CreateAttachments;
-import com.enonic.xp.content.query.ContentQuery;
 import com.enonic.xp.context.ContextAccessor;
 import com.enonic.xp.form.InlineMixinsToFormItemsTransformer;
 import com.enonic.xp.index.ChildOrder;
@@ -125,7 +125,6 @@ import com.enonic.xp.security.RoleKeys;
 import com.enonic.xp.security.SecurityService;
 import com.enonic.xp.security.acl.AccessControlList;
 import com.enonic.xp.security.auth.AuthenticationInfo;
-import com.enonic.xp.site.SiteService;
 
 import static org.apache.commons.lang.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -151,8 +150,6 @@ public final class ContentResource
     private final static String EXPAND_NONE = "none";
 
     private ContentService contentService;
-
-    private SiteService siteService;
 
     private ContentTypeService contentTypeService;
 
@@ -549,7 +546,7 @@ public final class ContentResource
     public ContentJson getNearest( final GetNearestSiteJson params )
     {
         final ContentId contentId = params.getGetNearestSiteByContentId();
-        final Content nearestSite = this.siteService.getNearestSite( contentId );
+        final Content nearestSite = this.contentService.getNearestSite( contentId );
         if ( nearestSite != null )
         {
             return new ContentJson( nearestSite, newContentIconUrlResolver(), inlineMixinsToFormItemsTransformer, principalsResolver );
@@ -836,12 +833,6 @@ public final class ContentResource
     public void setContentService( final ContentService contentService )
     {
         this.contentService = contentService;
-    }
-
-    @Reference
-    public void setSiteService( final SiteService siteService )
-    {
-        this.siteService = siteService;
     }
 
     @Reference

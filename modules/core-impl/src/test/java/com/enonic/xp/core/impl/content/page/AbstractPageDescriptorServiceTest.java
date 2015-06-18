@@ -2,7 +2,7 @@ package com.enonic.xp.core.impl.content.page;
 
 import org.junit.Before;
 
-import com.enonic.xp.content.page.DescriptorKey;
+import com.enonic.xp.page.DescriptorKey;
 import com.enonic.xp.resource.ResourceKey;
 
 public abstract class AbstractPageDescriptorServiceTest
@@ -19,7 +19,7 @@ public abstract class AbstractPageDescriptorServiceTest
     @Override
     protected final ResourceKey toResourceKey( final DescriptorKey key )
     {
-        return ResourceKey.from( key.getModuleKey(), "pages/" + key.getName() + "/page.xml" );
+        return ResourceKey.from( key.getModuleKey(), "app/pages/" + key.getName() + "/" + key.getName() + ".xml" );
     }
 
     @Override
