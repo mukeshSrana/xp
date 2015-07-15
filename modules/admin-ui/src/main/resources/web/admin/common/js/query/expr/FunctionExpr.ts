@@ -5,9 +5,9 @@ module api.query.expr {
         private name: string;
         private arguments: ValueExpr[] = [];
 
-        constructor(name: string, arguments: ValueExpr[]) {
+        constructor(name: string, args: ValueExpr[]) {
             this.name = name;
-            this.arguments = arguments;
+            this.arguments = args;
         }
 
         getName(): string {

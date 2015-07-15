@@ -6,6 +6,7 @@ module api.content.form.inputtype.image {
     import RichComboBox = api.ui.selector.combobox.RichComboBox;
     import RichComboBoxBuilder = api.ui.selector.combobox.RichComboBoxBuilder;
     import ImageSelectorDisplayValue = api.content.form.inputtype.image.ImageSelectorDisplayValue;
+    import ImageSelectorSelectedOptionsView = api.content.form.inputtype.image.ImageSelectorSelectedOptionsView;
 
     export class ImageContentComboBox extends RichComboBox<ImageSelectorDisplayValue> {
 
@@ -17,14 +18,15 @@ module api.content.form.inputtype.image {
             var richComboBoxBuilder = new RichComboBoxBuilder().
                 setComboBoxName(builder.name ? builder.name : 'imageContentSelector').
                 setLoader(loader).
-                setSelectedOptionsView(builder.selectedOptionsView ||
-                                       new api.content.form.inputtype.image.ImageSelectorSelectedOptionsView()).
+                setSelectedOptionsView(builder.selectedOptionsView || new ImageSelectorSelectedOptionsView()).
                 setMaximumOccurrences(builder.maximumOccurrences).
                 setOptionDisplayValueViewer(new api.content.form.inputtype.image.ImageSelectorViewer()).
                 setDelayedInputValueChangedHandling(750).
                 setMinWidth(builder.minWidth);
 
-            super(richComboBoxBuilder);
+            // Actually the hack.
+            // ImageSelectorSelectedOptionsView and BaseSelectedOptionsView<ContentSummary> are incompatible in loaders.
+            super(<RichComboBoxBuilder<ImageSelectorDisplayValue>>richComboBoxBuilder);
         }
 
         createOption(value: ContentSummary): Option<ImageSelectorDisplayValue> {
@@ -51,7 +53,7 @@ module api.content.form.inputtype.image {
 
         minWidth: number;
 
-        selectedOptionsView: api.content.form.inputtype.image.ImageSelectorSelectedOptionsView;
+        selectedOptionsView: ImageSelectorSelectedOptionsView;
 
         optionDisplayValueViewer: api.content.form.inputtype.image.ImageSelectorViewer;
 
@@ -80,7 +82,7 @@ module api.content.form.inputtype.image {
             return this;
         }
 
-        setSelectedOptionsView(value: api.content.form.inputtype.image.ImageSelectorSelectedOptionsView): ImageContentComboBoxBuilder {
+        setSelectedOptionsView(value: ImageSelectorSelectedOptionsView): ImageContentComboBoxBuilder {
             this.selectedOptionsView = value;
             return this;
         }
