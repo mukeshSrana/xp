@@ -17,6 +17,8 @@ include 'web-impl'
 include 'web-jaxrs'
 include 'web-vhost'
 
+include 'jaxrs-swagger'
+
 include 'portal-api'
 include 'portal-impl'
 

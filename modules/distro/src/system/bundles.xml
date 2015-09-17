@@ -22,11 +22,14 @@
   <!-- Core app dependencies -->
   <bundle level="30">com.google.guava:guava:18.0</bundle>
   <bundle level="30">commons-lang:commons-lang:2.4</bundle>
+  <bundle level="30">org.apache.commons:commons-lang3:3.4</bundle>
   <bundle level="30">commons-io:commons-io:2.4</bundle>
   <bundle level="30">com.fasterxml.jackson.core:jackson-core:2.4.1</bundle>
   <bundle level="30">com.fasterxml.jackson.core:jackson-annotations:2.4.1</bundle>
   <bundle level="30">com.fasterxml.jackson.core:jackson-databind:2.4.1</bundle>
   <bundle level="30">com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.4.1</bundle>
+  <bundle level="30">org.yaml:snakeyaml:1.16</bundle>
+  <bundle level="30">com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.4.1</bundle>
   <bundle level="30">org.apache.tika:tika-core:1.6</bundle>
   <bundle level="30">org.apache.tika:tika-bundle:1.6</bundle>
   <bundle level="30">${group}:repack-jparsec:${version}</bundle>
@@ -56,6 +59,7 @@
   <bundle level="30">${group}:web-impl:${version}</bundle>
   <bundle level="30">${group}:web-vhost:${version}</bundle>
   <bundle level="30">${group}:web-jaxrs:${version}</bundle>
+  <bundle level="30">${group}:jaxrs-swagger:${version}</bundle>
 
   <!-- Portal app dependencies -->
   <bundle level="30">${group}:repack-attoparser:${version}</bundle>

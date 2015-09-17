@@ -9,6 +9,9 @@ import javax.ws.rs.core.MediaType;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
 import com.enonic.xp.web.jaxrs.JaxRsComponent;
 import com.enonic.xp.admin.impl.app.AdminApplicationsRegistry;
 import com.enonic.xp.admin.impl.rest.resource.ResourceConstants;
@@ -23,6 +26,7 @@ import com.enonic.xp.session.Session;
 @Path(ResourceConstants.REST_ROOT + "auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Component(immediate = true)
+@Api(value = "auth", description = "Some description")
 public final class AuthResource
     implements JaxRsComponent
 {
@@ -37,6 +41,7 @@ public final class AuthResource
 
     @POST
     @Path("login")
+    @ApiOperation("Logis into the system")
     public LoginResultJson login( final LoginRequest request )
     {
         final AuthHelper helper = new AuthHelper( this.securityService );

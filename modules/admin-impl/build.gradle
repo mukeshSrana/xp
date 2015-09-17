@@ -2,6 +2,7 @@ apply from: "$rootDir/gradle/osgi.gradle"
 
 dependencies {
     compile project( ':admin-api' )
+    compile 'io.swagger:swagger-annotations:1.5.3'
     testCompile project( ':web-jaxrs' )
     testCompile project( path: ':portal-api', configuration: 'testOutput' )
     testCompile project( path: ':web-jaxrs', configuration: 'testOutput' )
